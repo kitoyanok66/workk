@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kitoyanok66/workk/domain"
 )
 
 type UserDTO struct {
