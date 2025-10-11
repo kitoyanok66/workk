@@ -1,0 +1,52 @@
+openapi: 3.0.0
+info:
+  title: API
+  version: 1.0.0
+
+tags:
+  - name: users
+    description: Users information
+#...
+
+paths:
+  /users:
+    get:
+      description: Get all users
+      tags:
+        - users
+      responses:
+        200:
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDTO'
+#...
+
+components:
+  schemas:
+    UserDTO:
+      x-go-type: dto.UserDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/krisch/crm-backend/dto
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        telegram_user_id:
+          type: bigint
+        telegram_username:
+          type: string
+        full_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
