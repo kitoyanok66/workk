@@ -1,29 +1,166 @@
 openapi: 3.0.0
 info:
-  title: API
+  title: Workk API
   version: 1.0.0
 
 tags:
   - name: users
-    description: Users information
-#...
+    description: Endpoints for managing user accounts and retrieving user information.
 
 paths:
   /users:
     get:
-      description: Get all users
+      summary: Get all users
+      description: Returns list of all registered users in the system.
       tags:
         - users
       responses:
         200:
-          description: Ok
+          description: Successfully fetched users.
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserDTO'
-#...
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create new user
+      description: Creates a new user record in the system using provided information.
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        201:
+          description: User successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      description: Retrieves detailed information about a specific user by their unique ID.
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: User found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update user
+      description: Updates specific fields of an existing user by their ID.
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        200:
+          description: User updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete user by ID
+      description: Permanently deletes a user from the system by their unique ID.
+      tags:
+        - users
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: User successfully deleted.
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -31,14 +168,15 @@ components:
       x-go-type: dto.UserDTO
       x-go-type-import:
         name: dto
-        path: github.com/krisch/crm-backend/dto
+        path: github.com/kitoyanok66/workk/dto
       type: object
+      description: Data Transfer Object representing a user.
       properties:
         id:
           type: string
           format: uuid
         telegram_user_id:
-          type: bigint
+          type: integer
         telegram_username:
           type: string
         full_name:
@@ -49,4 +187,28 @@ components:
         updated_at:
           type: string
           format: date-time
-
+    UserRequest:
+      x-go-type: dto.UserRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for creating or updating a user.
+      properties:
+        telegram_user_id:
+          type: integer
+        telegram_username:
+          type: string
+        full_name:
+          type: string
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int
+        message:
+          type: string

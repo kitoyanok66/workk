@@ -1,8 +1,13 @@
 # Makefile
 
+# Подтягиваем SHELL
+SHELL := C:/Program Files/Git/bin/bash.exe
+
 # Подтягиваем переменные из .env
+ifneq (,$(wildcard ./.env))
 include .env
-export $(shell sed 's/-.*//' .env)
+export
+endif
 
 DB_DSN := "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)"
 MIGRATE := migrate -path ./migrations -database $(DB_DSN)

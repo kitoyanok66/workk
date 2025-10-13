@@ -17,21 +17,28 @@ type User struct {
 	UpdatedAt        time.Time
 }
 
-func NewUser(telegramUserId int64, telegramUsername, fullname string) (*User, error) {
-	if telegramUserId == 0 {
+func NewUser(telegramUserID int64, telegramUsername, fullname string) (*User, error) {
+	if telegramUserID == 0 {
 		return nil, errors.New("telegram user id cannot be empty")
 	}
 	if strings.TrimSpace(fullname) == "" {
 		return nil, errors.New("full name cannot be empty")
 	}
 
+	id := uuid.New()
+
+	if strings.TrimSpace(telegramUsername) == "" {
+		telegramUsername = "user_" + id.String()[:8]
+	}
+
+	now := time.Now()
 	return &User{
-		ID:               uuid.New(),
-		TelegramUserID:   telegramUserId,
+		ID:               id,
+		TelegramUserID:   telegramUserID,
 		TelegramUsername: telegramUsername,
 		Fullname:         fullname,
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}, nil
 }
 
