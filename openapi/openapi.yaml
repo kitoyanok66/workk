@@ -6,8 +6,164 @@ info:
 tags:
   - name: users
     description: Endpoints for managing user accounts and retrieving user information.
+  - name: skills
+    description: Endpoints for managing skills and retrieving skill information.
 
 paths:
+  /skills:
+    get:
+      summary: Get all skills
+      description: Returns list of all skills in the system.
+      tags:
+        - skills
+      responses:
+        200:
+          description: Successfully fetched skills.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SkillDTO'
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create new skill
+      description: Creates a new skill record in the system using provided information.
+      tags:
+        - skills
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillRequest'
+      responses:
+        201:
+          description: Skill successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Skill not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /skills/{id}:
+    get:
+      summary: Get skill by ID
+      description: Retrieves detailed information about a specific skill by their unique ID.
+      tags:
+        - skills
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Skill found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Skill not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update skill
+      description: Updates specific fields of an existing skill by their ID.
+      tags:
+        - skills
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillRequest'
+      responses:
+        200:
+          description: Skill updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Skill not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete skill by ID
+      description: Permanently deletes a skill from the system by their unique ID.
+      tags:
+        - skills
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Skill successfully deleted.
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Skill not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /users:
     get:
       summary: Get all users
@@ -164,6 +320,43 @@ paths:
 
 components:
   schemas:
+    SkillDTO:
+      x-go-type: dto.SkillDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Data Transfer Object representing a skill.
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    SkillRequest:
+      x-go-type: dto.SkillRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for creating or updating a skill.
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
     UserDTO:
       x-go-type: dto.UserDTO
       x-go-type-import:

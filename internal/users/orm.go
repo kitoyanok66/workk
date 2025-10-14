@@ -16,7 +16,6 @@ type UserORM struct {
 	UpdatedAt        time.Time `gorm:"default:now()"`
 }
 
-// ORM -> domain
 func (o *UserORM) ToDomain() *domain.User {
 	if o == nil {
 		return nil
@@ -31,7 +30,6 @@ func (o *UserORM) ToDomain() *domain.User {
 	}
 }
 
-// domain -> ORM
 func FromDomain(u *domain.User) *UserORM {
 	if u == nil {
 		return nil

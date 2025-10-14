@@ -7,7 +7,6 @@ import (
 	"github.com/kitoyanok66/workk/domain"
 )
 
-// DTO для ответа
 type UserDTO struct {
 	ID               uuid.UUID `json:"id"`
 	TelegramUserID   int64     `json:"telegram_user_id"`
@@ -17,14 +16,12 @@ type UserDTO struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
-// DTO для запроса создания/обновления
 type UserRequest struct {
 	TelegramUserID   int64  `json:"telegram_user_id"`
 	TelegramUsername string `json:"telegram_username,omitempty"`
 	Fullname         string `json:"full_name"`
 }
 
-// domain -> DTO
 func NewUserDTO(dm *domain.User) *UserDTO {
 	if dm == nil {
 		return nil
@@ -39,7 +36,6 @@ func NewUserDTO(dm *domain.User) *UserDTO {
 	}
 }
 
-// DTO -> domain
 func (dto *UserDTO) ToDomain() *domain.User {
 	if dto == nil {
 		return nil
