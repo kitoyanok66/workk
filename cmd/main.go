@@ -5,9 +5,11 @@ import (
 
 	"github.com/kitoyanok66/workk/config"
 	"github.com/kitoyanok66/workk/internal/db"
+	"github.com/kitoyanok66/workk/internal/freelancers"
 	"github.com/kitoyanok66/workk/internal/skills"
 	"github.com/kitoyanok66/workk/internal/users"
 	"github.com/kitoyanok66/workk/internal/web"
+	"github.com/kitoyanok66/workk/internal/web/ofreelancers"
 	"github.com/kitoyanok66/workk/internal/web/oskills"
 	"github.com/kitoyanok66/workk/internal/web/ousers"
 	"github.com/labstack/echo/v4"
@@ -37,4 +39,10 @@ func main() {
 	skillHandler := web.NewSkillHandler(skillService)
 	strictSkillHandler := oskills.NewStrictHandler(skillHandler, nil)
 	oskills.RegisterHandlers(e, strictSkillHandler)
+
+	freelancerRepository := freelancers.NewSkillRepository(database)
+	freelancerService := freelancers.NewFreelancerService(freelancerRepository, skillRepository)
+	freelancerHandler := web.NewFreelancerHandler(freelancerService)
+	strictFreelancerHandler := ofreelancers.NewStrictHandler(freelancerHandler, nil)
+	ofreelancers.RegisterHandlers(e, strictFreelancerHandler)
 }

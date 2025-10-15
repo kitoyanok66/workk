@@ -4,17 +4,127 @@
 package ofreelancers
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	dto "github.com/kitoyanok66/workk/dto"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Error defines model for Error.
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// FreelancerDTO Data Transfer Object representing a freelancer.
+type FreelancerDTO = dto.FreelancerDTO
+
+// FreelancerRequest Request body for creating or updating a freelancer.
+type FreelancerRequest = dto.FreelancerRequest
+
+// SkillDTO Data Transfer Object representing a skill.
+type SkillDTO = dto.SkillDTO
+
+// PostFreelancersJSONRequestBody defines body for PostFreelancers for application/json ContentType.
+type PostFreelancersJSONRequestBody = FreelancerRequest
+
+// PatchFreelancersIdJSONRequestBody defines body for PatchFreelancersId for application/json ContentType.
+type PatchFreelancersIdJSONRequestBody = FreelancerRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get all freelancers
+	// (GET /freelancers)
+	GetFreelancers(ctx echo.Context) error
+	// Create new freelancer
+	// (POST /freelancers)
+	PostFreelancers(ctx echo.Context) error
+	// Delete freelancer by ID
+	// (DELETE /freelancers/{id})
+	DeleteFreelancersId(ctx echo.Context, id openapi_types.UUID) error
+	// Get freelancer by ID
+	// (GET /freelancers/{id})
+	GetFreelancersId(ctx echo.Context, id openapi_types.UUID) error
+	// Update freelancer
+	// (PATCH /freelancers/{id})
+	PatchFreelancersId(ctx echo.Context, id openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetFreelancers converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFreelancers(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFreelancers(ctx)
+	return err
+}
+
+// PostFreelancers converts echo context to params.
+func (w *ServerInterfaceWrapper) PostFreelancers(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostFreelancers(ctx)
+	return err
+}
+
+// DeleteFreelancersId converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteFreelancersId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteFreelancersId(ctx, id)
+	return err
+}
+
+// GetFreelancersId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFreelancersId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFreelancersId(ctx, id)
+	return err
+}
+
+// PatchFreelancersId converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchFreelancersId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PatchFreelancersId(ctx, id)
+	return err
 }
 
 // This is a simple interface which specifies echo.Route addition functions which
@@ -41,10 +151,209 @@ func RegisterHandlers(router EchoRouter, si ServerInterface) {
 // can be served under a prefix.
 func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL string) {
 
+	wrapper := ServerInterfaceWrapper{
+		Handler: si,
+	}
+
+	router.GET(baseURL+"/freelancers", wrapper.GetFreelancers)
+	router.POST(baseURL+"/freelancers", wrapper.PostFreelancers)
+	router.DELETE(baseURL+"/freelancers/:id", wrapper.DeleteFreelancersId)
+	router.GET(baseURL+"/freelancers/:id", wrapper.GetFreelancersId)
+	router.PATCH(baseURL+"/freelancers/:id", wrapper.PatchFreelancersId)
+
+}
+
+type GetFreelancersRequestObject struct {
+}
+
+type GetFreelancersResponseObject interface {
+	VisitGetFreelancersResponse(w http.ResponseWriter) error
+}
+
+type GetFreelancers200JSONResponse []FreelancerDTO
+
+func (response GetFreelancers200JSONResponse) VisitGetFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancers500JSONResponse Error
+
+func (response GetFreelancers500JSONResponse) VisitGetFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostFreelancersRequestObject struct {
+	Body *PostFreelancersJSONRequestBody
+}
+
+type PostFreelancersResponseObject interface {
+	VisitPostFreelancersResponse(w http.ResponseWriter) error
+}
+
+type PostFreelancers201JSONResponse FreelancerDTO
+
+func (response PostFreelancers201JSONResponse) VisitPostFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostFreelancers400JSONResponse Error
+
+func (response PostFreelancers400JSONResponse) VisitPostFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostFreelancers404JSONResponse Error
+
+func (response PostFreelancers404JSONResponse) VisitPostFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteFreelancersIdRequestObject struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+type DeleteFreelancersIdResponseObject interface {
+	VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error
+}
+
+type DeleteFreelancersId204Response struct {
+}
+
+func (response DeleteFreelancersId204Response) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteFreelancersId400JSONResponse Error
+
+func (response DeleteFreelancersId400JSONResponse) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteFreelancersId404JSONResponse Error
+
+func (response DeleteFreelancersId404JSONResponse) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersIdRequestObject struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+type GetFreelancersIdResponseObject interface {
+	VisitGetFreelancersIdResponse(w http.ResponseWriter) error
+}
+
+type GetFreelancersId200JSONResponse FreelancerDTO
+
+func (response GetFreelancersId200JSONResponse) VisitGetFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersId400JSONResponse Error
+
+func (response GetFreelancersId400JSONResponse) VisitGetFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersId404JSONResponse Error
+
+func (response GetFreelancersId404JSONResponse) VisitGetFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersId500JSONResponse Error
+
+func (response GetFreelancersId500JSONResponse) VisitGetFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchFreelancersIdRequestObject struct {
+	Id   openapi_types.UUID `json:"id"`
+	Body *PatchFreelancersIdJSONRequestBody
+}
+
+type PatchFreelancersIdResponseObject interface {
+	VisitPatchFreelancersIdResponse(w http.ResponseWriter) error
+}
+
+type PatchFreelancersId200JSONResponse FreelancerDTO
+
+func (response PatchFreelancersId200JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchFreelancersId400JSONResponse Error
+
+func (response PatchFreelancersId400JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchFreelancersId404JSONResponse Error
+
+func (response PatchFreelancersId404JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Get all freelancers
+	// (GET /freelancers)
+	GetFreelancers(ctx context.Context, request GetFreelancersRequestObject) (GetFreelancersResponseObject, error)
+	// Create new freelancer
+	// (POST /freelancers)
+	PostFreelancers(ctx context.Context, request PostFreelancersRequestObject) (PostFreelancersResponseObject, error)
+	// Delete freelancer by ID
+	// (DELETE /freelancers/{id})
+	DeleteFreelancersId(ctx context.Context, request DeleteFreelancersIdRequestObject) (DeleteFreelancersIdResponseObject, error)
+	// Get freelancer by ID
+	// (GET /freelancers/{id})
+	GetFreelancersId(ctx context.Context, request GetFreelancersIdRequestObject) (GetFreelancersIdResponseObject, error)
+	// Update freelancer
+	// (PATCH /freelancers/{id})
+	PatchFreelancersId(ctx context.Context, request PatchFreelancersIdRequestObject) (PatchFreelancersIdResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -57,4 +366,137 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// GetFreelancers operation middleware
+func (sh *strictHandler) GetFreelancers(ctx echo.Context) error {
+	var request GetFreelancersRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFreelancers(ctx.Request().Context(), request.(GetFreelancersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFreelancers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFreelancersResponseObject); ok {
+		return validResponse.VisitGetFreelancersResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostFreelancers operation middleware
+func (sh *strictHandler) PostFreelancers(ctx echo.Context) error {
+	var request PostFreelancersRequestObject
+
+	var body PostFreelancersJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostFreelancers(ctx.Request().Context(), request.(PostFreelancersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostFreelancers")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostFreelancersResponseObject); ok {
+		return validResponse.VisitPostFreelancersResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteFreelancersId operation middleware
+func (sh *strictHandler) DeleteFreelancersId(ctx echo.Context, id openapi_types.UUID) error {
+	var request DeleteFreelancersIdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteFreelancersId(ctx.Request().Context(), request.(DeleteFreelancersIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteFreelancersId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteFreelancersIdResponseObject); ok {
+		return validResponse.VisitDeleteFreelancersIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetFreelancersId operation middleware
+func (sh *strictHandler) GetFreelancersId(ctx echo.Context, id openapi_types.UUID) error {
+	var request GetFreelancersIdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFreelancersId(ctx.Request().Context(), request.(GetFreelancersIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFreelancersId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFreelancersIdResponseObject); ok {
+		return validResponse.VisitGetFreelancersIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PatchFreelancersId operation middleware
+func (sh *strictHandler) PatchFreelancersId(ctx echo.Context, id openapi_types.UUID) error {
+	var request PatchFreelancersIdRequestObject
+
+	request.Id = id
+
+	var body PatchFreelancersIdJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PatchFreelancersId(ctx.Request().Context(), request.(PatchFreelancersIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PatchFreelancersId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PatchFreelancersIdResponseObject); ok {
+		return validResponse.VisitPatchFreelancersIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }

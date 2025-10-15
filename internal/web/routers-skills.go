@@ -19,7 +19,7 @@ func NewSkillHandler(svc skills.SkillService) *skillHandler {
 }
 
 // GET /skills
-func (h *skillHandler) GetSkills(ctx context.Context, request oskills.GetSkillsRequestObject) (oskills.GetSkillsResponseObject, error) {
+func (h *skillHandler) GetSkills(ctx context.Context, _ oskills.GetSkillsRequestObject) (oskills.GetSkillsResponseObject, error) {
 	skillsList, err := h.svc.GetAll(ctx)
 	if err != nil {
 		return oskills.GetSkills500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil

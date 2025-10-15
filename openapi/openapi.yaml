@@ -8,8 +8,163 @@ tags:
     description: Endpoints for managing user accounts and retrieving user information.
   - name: skills
     description: Endpoints for managing skills and retrieving skill information.
+  - name: freelancers
+    description: Endpoints for managing freelancers and retrieving freelancer information.
 
 paths:
+  /freelancers:
+    get:
+      summary: Get all freelancers
+      description: Returns list of all freelancers in the system.
+      tags:
+        - freelancers
+      responses:
+        200:
+          description: Successfully fetched freelancers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FreelancerDTO'
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create new freelancer
+      description: Creates a new freelancer record in the system using provided information.
+      tags:
+        - freelancers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreelancerRequest'
+      responses:
+        201:
+          description: Freelancer successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreelancerDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Freelancer not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /freelancers/{id}:
+    get:
+      summary: Get freelancer by ID
+      description: Retrieves detailed information about a specific freelancer by their unique ID.
+      tags:
+        - freelancers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Freelancer found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreelancerDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Freelancer not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update freelancer
+      description: Updates specific fields of an existing freelancer by their ID.
+      tags:
+        - freelancers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FreelancerRequest'
+      responses:
+        200:
+          description: Freelancer updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreelancerDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Freelancer not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete freelancer by ID
+      description: Permanently deletes a freelancer from the system by their unique ID.
+      tags:
+        - freelancers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Freelancer successfully deleted.
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Freelancer not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /skills:
     get:
       summary: Get all skills
@@ -163,7 +318,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
   /users:
     get:
       summary: Get all users
@@ -320,6 +474,68 @@ paths:
 
 components:
   schemas:
+    FreelancerDTO:
+      x-go-type: dto.FreelancerDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Data Transfer Object representing a freelancer.
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        hourly_rate:
+          type: number
+        portfolio_url:
+          type: string
+        experience_years:
+          type: integer
+        rating:
+          type: number
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillDTO'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    FreelancerRequest:
+      x-go-type: dto.FreelancerRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for creating or updating a freelancer.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        hourly_rate:
+          type: number
+        portfolio_url:
+          type: string
+        experience_years:
+          type: integer
+        skill_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
     SkillDTO:
       x-go-type: dto.SkillDTO
       x-go-type-import:
