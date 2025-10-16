@@ -45,4 +45,8 @@ func main() {
 	freelancerHandler := web.NewFreelancerHandler(freelancerService)
 	strictFreelancerHandler := ofreelancers.NewStrictHandler(freelancerHandler, nil)
 	ofreelancers.RegisterHandlers(e, strictFreelancerHandler)
+
+	if err := e.Start(":8080"); err != nil {
+		log.Fatalf("failed to start with error: %v", err)
+	}
 }

@@ -22,6 +22,10 @@ type FreelancerORM struct {
 	Skills          []*skills.SkillORM `gorm:"many2many:freelancer_skills;constraint:OnDelete:CASCADE"`
 }
 
+func (FreelancerORM) TableName() string {
+	return "freelancers"
+}
+
 func (o *FreelancerORM) ToDomain() *domain.Freelancer {
 	if o == nil {
 		return nil

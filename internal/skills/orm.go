@@ -16,6 +16,10 @@ type SkillORM struct {
 	UpdatedAt   time.Time `gorm:"default:now()"`
 }
 
+func (SkillORM) TableName() string {
+	return "skills"
+}
+
 func (o *SkillORM) ToDomain() *domain.Skill {
 	if o == nil {
 		return nil
