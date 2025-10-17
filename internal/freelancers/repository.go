@@ -22,7 +22,7 @@ type freelancerRepository struct {
 	db *gorm.DB
 }
 
-func NewSkillRepository(db *gorm.DB) FreelancerRepository {
+func NewFreelancerRepository(db *gorm.DB) FreelancerRepository {
 	return &freelancerRepository{db: db}
 }
 

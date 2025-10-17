@@ -10,8 +10,163 @@ tags:
     description: Endpoints for managing skills and retrieving skill information.
   - name: freelancers
     description: Endpoints for managing freelancers and retrieving freelancer information.
+  - name: projects
+    description: Endpoints for managing projects and retrieving project information.
 
 paths:
+  /projects:
+    get:
+      summary: Get all projects
+      description: Returns list of all projects in the system.
+      tags:
+        - projects
+      responses:
+        200:
+          description: Successfully fetched projects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectDTO'
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create new project
+      description: Creates a new project record in the system using provided information.
+      tags:
+        - projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+      responses:
+        201:
+          description: Project successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Project not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /projects/{id}:
+    get:
+      summary: Get project by ID
+      description: Retrieves detailed information about a specific project by their unique ID.
+      tags:
+        - projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Project found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Project not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    patch:
+      summary: Update project
+      description: Updates specific fields of an existing project by their ID.
+      tags:
+        - projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectRequest'
+      responses:
+        200:
+          description: Project updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Project not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete project by ID
+      description: Permanently deletes a project from the system by their unique ID.
+      tags:
+        - projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Project successfully deleted.
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Project not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /freelancers:
     get:
       summary: Get all freelancers
@@ -474,6 +629,66 @@ paths:
 
 components:
   schemas:
+    ProjectDTO:
+      x-go-type: dto.ProjectDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Data Transfer Object representing a project.
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        budget:
+          type: number
+          format: float
+        deadline:
+          type: string
+          format: date-time
+        skills:
+          type: array
+          items:
+            $ref: '#/components/schemas/SkillDTO'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ProjectRequest:
+      x-go-type: dto.ProjectRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for creating or updating a project.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        budget:
+          type: number
+          format: float
+        deadline:
+          type: string
+          format: date-time
+        skill_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
     FreelancerDTO:
       x-go-type: dto.FreelancerDTO
       x-go-type-import:

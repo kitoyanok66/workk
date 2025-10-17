@@ -4,17 +4,127 @@
 package oprojects
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	dto "github.com/kitoyanok66/workk/dto"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Error defines model for Error.
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// ProjectDTO Data Transfer Object representing a project.
+type ProjectDTO = dto.ProjectDTO
+
+// ProjectRequest Request body for creating or updating a project.
+type ProjectRequest = dto.ProjectRequest
+
+// SkillDTO Data Transfer Object representing a skill.
+type SkillDTO = dto.SkillDTO
+
+// PostProjectsJSONRequestBody defines body for PostProjects for application/json ContentType.
+type PostProjectsJSONRequestBody = ProjectRequest
+
+// PatchProjectsIdJSONRequestBody defines body for PatchProjectsId for application/json ContentType.
+type PatchProjectsIdJSONRequestBody = ProjectRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get all projects
+	// (GET /projects)
+	GetProjects(ctx echo.Context) error
+	// Create new project
+	// (POST /projects)
+	PostProjects(ctx echo.Context) error
+	// Delete project by ID
+	// (DELETE /projects/{id})
+	DeleteProjectsId(ctx echo.Context, id openapi_types.UUID) error
+	// Get project by ID
+	// (GET /projects/{id})
+	GetProjectsId(ctx echo.Context, id openapi_types.UUID) error
+	// Update project
+	// (PATCH /projects/{id})
+	PatchProjectsId(ctx echo.Context, id openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetProjects converts echo context to params.
+func (w *ServerInterfaceWrapper) GetProjects(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetProjects(ctx)
+	return err
+}
+
+// PostProjects converts echo context to params.
+func (w *ServerInterfaceWrapper) PostProjects(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostProjects(ctx)
+	return err
+}
+
+// DeleteProjectsId converts echo context to params.
+func (w *ServerInterfaceWrapper) DeleteProjectsId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.DeleteProjectsId(ctx, id)
+	return err
+}
+
+// GetProjectsId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetProjectsId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetProjectsId(ctx, id)
+	return err
+}
+
+// PatchProjectsId converts echo context to params.
+func (w *ServerInterfaceWrapper) PatchProjectsId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PatchProjectsId(ctx, id)
+	return err
 }
 
 // This is a simple interface which specifies echo.Route addition functions which
@@ -41,10 +151,209 @@ func RegisterHandlers(router EchoRouter, si ServerInterface) {
 // can be served under a prefix.
 func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL string) {
 
+	wrapper := ServerInterfaceWrapper{
+		Handler: si,
+	}
+
+	router.GET(baseURL+"/projects", wrapper.GetProjects)
+	router.POST(baseURL+"/projects", wrapper.PostProjects)
+	router.DELETE(baseURL+"/projects/:id", wrapper.DeleteProjectsId)
+	router.GET(baseURL+"/projects/:id", wrapper.GetProjectsId)
+	router.PATCH(baseURL+"/projects/:id", wrapper.PatchProjectsId)
+
+}
+
+type GetProjectsRequestObject struct {
+}
+
+type GetProjectsResponseObject interface {
+	VisitGetProjectsResponse(w http.ResponseWriter) error
+}
+
+type GetProjects200JSONResponse []ProjectDTO
+
+func (response GetProjects200JSONResponse) VisitGetProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjects500JSONResponse Error
+
+func (response GetProjects500JSONResponse) VisitGetProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProjectsRequestObject struct {
+	Body *PostProjectsJSONRequestBody
+}
+
+type PostProjectsResponseObject interface {
+	VisitPostProjectsResponse(w http.ResponseWriter) error
+}
+
+type PostProjects201JSONResponse ProjectDTO
+
+func (response PostProjects201JSONResponse) VisitPostProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProjects400JSONResponse Error
+
+func (response PostProjects400JSONResponse) VisitPostProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProjects404JSONResponse Error
+
+func (response PostProjects404JSONResponse) VisitPostProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteProjectsIdRequestObject struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+type DeleteProjectsIdResponseObject interface {
+	VisitDeleteProjectsIdResponse(w http.ResponseWriter) error
+}
+
+type DeleteProjectsId204Response struct {
+}
+
+func (response DeleteProjectsId204Response) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteProjectsId400JSONResponse Error
+
+func (response DeleteProjectsId400JSONResponse) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteProjectsId404JSONResponse Error
+
+func (response DeleteProjectsId404JSONResponse) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsIdRequestObject struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+type GetProjectsIdResponseObject interface {
+	VisitGetProjectsIdResponse(w http.ResponseWriter) error
+}
+
+type GetProjectsId200JSONResponse ProjectDTO
+
+func (response GetProjectsId200JSONResponse) VisitGetProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsId400JSONResponse Error
+
+func (response GetProjectsId400JSONResponse) VisitGetProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsId404JSONResponse Error
+
+func (response GetProjectsId404JSONResponse) VisitGetProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsId500JSONResponse Error
+
+func (response GetProjectsId500JSONResponse) VisitGetProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchProjectsIdRequestObject struct {
+	Id   openapi_types.UUID `json:"id"`
+	Body *PatchProjectsIdJSONRequestBody
+}
+
+type PatchProjectsIdResponseObject interface {
+	VisitPatchProjectsIdResponse(w http.ResponseWriter) error
+}
+
+type PatchProjectsId200JSONResponse ProjectDTO
+
+func (response PatchProjectsId200JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchProjectsId400JSONResponse Error
+
+func (response PatchProjectsId400JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchProjectsId404JSONResponse Error
+
+func (response PatchProjectsId404JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Get all projects
+	// (GET /projects)
+	GetProjects(ctx context.Context, request GetProjectsRequestObject) (GetProjectsResponseObject, error)
+	// Create new project
+	// (POST /projects)
+	PostProjects(ctx context.Context, request PostProjectsRequestObject) (PostProjectsResponseObject, error)
+	// Delete project by ID
+	// (DELETE /projects/{id})
+	DeleteProjectsId(ctx context.Context, request DeleteProjectsIdRequestObject) (DeleteProjectsIdResponseObject, error)
+	// Get project by ID
+	// (GET /projects/{id})
+	GetProjectsId(ctx context.Context, request GetProjectsIdRequestObject) (GetProjectsIdResponseObject, error)
+	// Update project
+	// (PATCH /projects/{id})
+	PatchProjectsId(ctx context.Context, request PatchProjectsIdRequestObject) (PatchProjectsIdResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -57,4 +366,137 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// GetProjects operation middleware
+func (sh *strictHandler) GetProjects(ctx echo.Context) error {
+	var request GetProjectsRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetProjects(ctx.Request().Context(), request.(GetProjectsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetProjects")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetProjectsResponseObject); ok {
+		return validResponse.VisitGetProjectsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostProjects operation middleware
+func (sh *strictHandler) PostProjects(ctx echo.Context) error {
+	var request PostProjectsRequestObject
+
+	var body PostProjectsJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostProjects(ctx.Request().Context(), request.(PostProjectsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostProjects")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostProjectsResponseObject); ok {
+		return validResponse.VisitPostProjectsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// DeleteProjectsId operation middleware
+func (sh *strictHandler) DeleteProjectsId(ctx echo.Context, id openapi_types.UUID) error {
+	var request DeleteProjectsIdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteProjectsId(ctx.Request().Context(), request.(DeleteProjectsIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteProjectsId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(DeleteProjectsIdResponseObject); ok {
+		return validResponse.VisitDeleteProjectsIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetProjectsId operation middleware
+func (sh *strictHandler) GetProjectsId(ctx echo.Context, id openapi_types.UUID) error {
+	var request GetProjectsIdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetProjectsId(ctx.Request().Context(), request.(GetProjectsIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetProjectsId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetProjectsIdResponseObject); ok {
+		return validResponse.VisitGetProjectsIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PatchProjectsId operation middleware
+func (sh *strictHandler) PatchProjectsId(ctx echo.Context, id openapi_types.UUID) error {
+	var request PatchProjectsIdRequestObject
+
+	request.Id = id
+
+	var body PatchProjectsIdJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PatchProjectsId(ctx.Request().Context(), request.(PatchProjectsIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PatchProjectsId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PatchProjectsIdResponseObject); ok {
+		return validResponse.VisitPatchProjectsIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }

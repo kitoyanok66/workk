@@ -23,7 +23,7 @@ type projectService struct {
 	skillsRepo skills.SkillRepository
 }
 
-func NewFreelancerService(repo ProjectRepository, skillsRepo skills.SkillRepository) ProjectService {
+func NewProjectService(repo ProjectRepository, skillsRepo skills.SkillRepository) ProjectService {
 	return &projectService{
 		repo:       repo,
 		skillsRepo: skillsRepo,
