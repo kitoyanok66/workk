@@ -19,7 +19,7 @@ type FreelancerService interface {
 	Create(ctx context.Context, userID uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error)
 	Update(ctx context.Context, id uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetFeedForProject(ctx context.Context, projectID uuid.UUID) (*domain.Freelancer, error)
+	GetFeedForProject(ctx context.Context, projectID uuid.UUID) ([]*domain.Freelancer, error)
 
 	SetProjectDep(dep deps.ProjectFetcher)
 }
@@ -138,10 +138,16 @@ func (s *freelancerService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *freelancerService) GetFeedForProject(ctx context.Context, projectID uuid.UUID) (*domain.Freelancer, error) {
+func (s *freelancerService) GetFeedForProject(ctx context.Context, projectID uuid.UUID) ([]*domain.Freelancer, error) {
 	project, err := s.projectDep.GetByID(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
-	return s.repo.GetBySkillIDs(project.SkillIDs, 1)
+
+	var skillIDs []uuid.UUID
+	for _, sk := range project.Skills {
+		skillIDs = append(skillIDs, sk.ID)
+	}
+
+	return s.repo.GetBySkillIDs(ctx, skillIDs, projectID, 1)
 }

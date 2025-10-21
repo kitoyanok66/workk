@@ -8,14 +8,15 @@ import (
 	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/domain"
 	"github.com/kitoyanok66/workk/internal/freelancers"
+	"github.com/kitoyanok66/workk/internal/matches"
 	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/users"
 )
 
 type LikeService interface {
 	GetFeed(ctx context.Context, userID uuid.UUID) (interface{}, error)
-	Like(ctx context.Context, userID, targetID uuid.UUID) (*domain.Like, error)
-	Dislike(ctx context.Context, userID, targetID uuid.UUID) error
+	Like(ctx context.Context, fromUserID, toUserID uuid.UUID) (*domain.Like, error)
+	Dislike(ctx context.Context, fromUserID, toUserID uuid.UUID) error
 }
 
 type likeService struct {
@@ -23,14 +24,16 @@ type likeService struct {
 	userSvc       users.UserService
 	freelancerSvc freelancers.FreelancerService
 	projectSvc    projects.ProjectService
+	matchSvc      matches.MatchService
 }
 
-func NewLikeService(repo LikeRepository, userSvc users.UserService, freelancerSvc freelancers.FreelancerService, projectSvc projects.ProjectService) LikeService {
+func NewLikeService(repo LikeRepository, userSvc users.UserService, freelancerSvc freelancers.FreelancerService, projectSvc projects.ProjectService, matchSvc matches.MatchService) LikeService {
 	return &likeService{
 		repo:          repo,
 		userSvc:       userSvc,
 		freelancerSvc: freelancerSvc,
 		projectSvc:    projectSvc,
+		matchSvc:      matchSvc,
 	}
 }
 
@@ -63,15 +66,12 @@ func (s *likeService) GetFeed(ctx context.Context, userID uuid.UUID) (interface{
 	}
 }
 
-func (s *likeService) Like(ctx context.Context, userID, targetID uuid.UUID) (*domain.Like, error) {
-	if userID == uuid.Nil {
-		return nil, errors.New("invalid user id")
-	}
-	if targetID == uuid.Nil {
-		return nil, errors.New("invalid target id")
+func (s *likeService) Like(ctx context.Context, fromUserID, toUserID uuid.UUID) (*domain.Like, error) {
+	if fromUserID == uuid.Nil || toUserID == uuid.Nil {
+		return nil, errors.New("user IDs must not be empty")
 	}
 
-	like, err := domain.NewLike(userID, targetID)
+	like, err := domain.NewLike(fromUserID, toUserID)
 	if err != nil {
 		return nil, err
 	}
@@ -80,17 +80,20 @@ func (s *likeService) Like(ctx context.Context, userID, targetID uuid.UUID) (*do
 		return nil, err
 	}
 
-	exists, err := s.repo.ExistsReverse(ctx, userID, targetID)
+	exists, err := s.repo.ExistsReverse(ctx, fromUserID, toUserID)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		// TODO: интеграция с сервисом matchService.Create
+		_, err := s.matchSvc.Create(ctx, fromUserID, toUserID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return like, nil
 }
 
-func (s *likeService) Dislike(ctx context.Context, userID, targetID uuid.UUID) error {
+func (s *likeService) Dislike(ctx context.Context, fromUserID, toUserID uuid.UUID) error {
 	return nil
 }

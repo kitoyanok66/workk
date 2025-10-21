@@ -16,6 +16,7 @@ type ProjectRepository interface {
 	Create(ctx context.Context, project *domain.Project) error
 	Update(ctx context.Context, project *domain.Project) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, freelancerID uuid.UUID, limit int) ([]*domain.Project, error)
 }
 
 type projectRepository struct {
@@ -85,4 +86,36 @@ func (r *projectRepository) Update(ctx context.Context, project *domain.Project)
 
 func (r *projectRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&ProjectORM{}, "id = ?", id).Error
+}
+
+func (r *projectRepository) GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, freelancerID uuid.UUID, limit int) ([]*domain.Project, error) {
+	if len(skillIDs) == 0 {
+		return nil, nil
+	}
+
+	query := `
+        SELECT p.*
+        FROM projects p
+        JOIN project_skills ps ON p.id = ps.project_id
+        WHERE ps.skill_id IN ?
+        AND p.user_id NOT IN (
+            SELECT to_user_id
+            FROM likes
+            WHERE from_user_id = ?
+        )
+        GROUP BY p.id
+        ORDER BY COUNT(DISTINCT ps.skill_id) DESC
+        LIMIT ?;
+    `
+
+	var ormProjects []ProjectORM
+	if err := r.db.WithContext(ctx).Raw(query, skillIDs, freelancerID, limit).Scan(&ormProjects).Error; err != nil {
+		return nil, err
+	}
+
+	var result []*domain.Project
+	for _, p := range ormProjects {
+		result = append(result, p.ToDomain())
+	}
+	return result, nil
 }
