@@ -13,6 +13,7 @@ type User struct {
 	TelegramUserID   int64
 	TelegramUsername string
 	Fullname         string
+	Role             string
 	CreatedAt        time.Time
 	UpdatedAt        time.Time
 }
@@ -37,12 +38,13 @@ func NewUser(telegramUserID int64, telegramUsername, fullname string) (*User, er
 		TelegramUserID:   telegramUserID,
 		TelegramUsername: telegramUsername,
 		Fullname:         fullname,
+		Role:             "undefind",
 		CreatedAt:        now,
 		UpdatedAt:        now,
 	}, nil
 }
 
-func (u *User) ChangeFullName(newName string) error {
+func (u *User) UpdateFullName(newName string) error {
 	newName = strings.TrimSpace(newName)
 	if newName == "" {
 		return errors.New("new name cannot be empty")
@@ -52,7 +54,17 @@ func (u *User) ChangeFullName(newName string) error {
 	return nil
 }
 
-func (u *User) ChangeTelegramUsername(username string) {
+func (u *User) UpdateTelegramUsername(username string) {
 	u.TelegramUsername = strings.TrimSpace(username)
 	u.UpdatedAt = time.Now()
+}
+
+func (u *User) UpdateRole(role string) error {
+	role = strings.TrimSpace(role)
+	if role != "freelancer" && role != "project" && role != "undefind" {
+		return errors.New("role must be 'freelancer', 'project' or 'undefind'")
+	}
+	u.Role = role
+	u.UpdatedAt = time.Now()
+	return nil
 }

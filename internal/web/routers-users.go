@@ -72,7 +72,7 @@ func (h *userHandler) PatchUsersId(ctx context.Context, request ousers.PatchUser
 
 	body := request.Body
 
-	updatedUser, err := h.svc.Update(ctx, id, body.Fullname, body.TelegramUsername)
+	updatedUser, err := h.svc.Update(ctx, id, body.Fullname, body.TelegramUsername, body.Role)
 	if err != nil {
 		return ousers.PatchUsersId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}

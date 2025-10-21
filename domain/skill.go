@@ -52,33 +52,3 @@ func (s *Skill) UpdateSkill(newName, newCategory, newDescription string) error {
 	s.UpdatedAt = time.Now()
 	return nil
 }
-
-func (s *Skill) ChangeName(newName string) error {
-	newName = strings.TrimSpace(newName)
-	if newName == "" {
-		return errors.New("new name cannot be empty")
-	}
-	s.Name = newName
-	s.UpdatedAt = time.Now()
-	return nil
-}
-
-func (s *Skill) ChangeCategory(newCategory string) error {
-	newCategory = strings.TrimSpace(newCategory)
-	if newCategory == "" {
-		return errors.New("new category cannot be empty")
-	}
-	s.Category = newCategory
-	s.UpdatedAt = time.Now()
-	return nil
-}
-
-func (s *Skill) ChangeDescription(newDescription string) error {
-	newDescription = strings.TrimSpace(newDescription)
-	if newDescription == "" {
-		return errors.New("new description cannot be empty")
-	}
-	s.Category = newDescription
-	s.UpdatedAt = time.Now()
-	return nil
-}

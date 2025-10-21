@@ -6,27 +6,41 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/domain"
+
+	"github.com/kitoyanok66/workk/internal/deps"
 	"github.com/kitoyanok66/workk/internal/skills"
+	"github.com/kitoyanok66/workk/internal/users"
 )
 
 type FreelancerService interface {
 	GetAll(ctx context.Context) ([]*domain.Freelancer, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Freelancer, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID) (*domain.Freelancer, error)
 	Create(ctx context.Context, userID uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error)
 	Update(ctx context.Context, id uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error)
 	Delete(ctx context.Context, id uuid.UUID) error
+	GetFeedForProject(ctx context.Context, projectID uuid.UUID) (*domain.Freelancer, error)
+
+	SetProjectDep(dep deps.ProjectFetcher)
 }
 
 type freelancerService struct {
 	repo       FreelancerRepository
-	skillsRepo skills.SkillRepository
+	skillSvc   skills.SkillService
+	projectDep deps.ProjectFetcher
+	userSvc    users.UserService
 }
 
-func NewFreelancerService(repo FreelancerRepository, skillsRepo skills.SkillRepository) FreelancerService {
+func NewFreelancerService(repo FreelancerRepository, skillSvc skills.SkillService, userSvc users.UserService) FreelancerService {
 	return &freelancerService{
-		repo:       repo,
-		skillsRepo: skillsRepo,
+		repo:     repo,
+		skillSvc: skillSvc,
+		userSvc:  userSvc,
 	}
+}
+
+func (s *freelancerService) SetProjectDep(dep deps.ProjectFetcher) {
+	s.projectDep = dep
 }
 
 func (s *freelancerService) GetAll(ctx context.Context) ([]*domain.Freelancer, error) {
@@ -35,6 +49,10 @@ func (s *freelancerService) GetAll(ctx context.Context) ([]*domain.Freelancer, e
 
 func (s *freelancerService) GetByID(ctx context.Context, id uuid.UUID) (*domain.Freelancer, error) {
 	return s.repo.GetByID(ctx, id)
+}
+
+func (s *freelancerService) GetByUserID(ctx context.Context, userID uuid.UUID) (*domain.Freelancer, error) {
+	return s.repo.GetByUserID(ctx, userID)
 }
 
 func (s *freelancerService) Create(ctx context.Context, userID uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error) {
@@ -48,7 +66,7 @@ func (s *freelancerService) Create(ctx context.Context, userID uuid.UUID, title,
 
 	var skillsDomain []domain.Skill
 	for _, id := range skillIDs {
-		skill, err := s.skillsRepo.GetByID(ctx, id)
+		skill, err := s.skillSvc.GetByID(ctx, id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load skill %s: %w", id, err)
 		}
@@ -58,12 +76,26 @@ func (s *freelancerService) Create(ctx context.Context, userID uuid.UUID, title,
 		skillsDomain = append(skillsDomain, *skill)
 	}
 
+	project, err := s.projectDep.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if project != nil {
+		if err := s.projectDep.Delete(ctx, project.ID); err != nil {
+			return nil, err
+		}
+	}
+
 	freelancer, err := domain.NewFreelancer(userID, title, description, hourlyRate, portfolio, experience, skillsDomain)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := s.repo.Create(ctx, freelancer); err != nil {
+		return nil, err
+	}
+
+	if err := s.userSvc.UpdateRole(ctx, userID, "freelancer"); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +113,7 @@ func (s *freelancerService) Update(ctx context.Context, id uuid.UUID, title, des
 
 	var skillsDomain []domain.Skill
 	for _, id := range skillIDs {
-		skill, err := s.skillsRepo.GetByID(ctx, id)
+		skill, err := s.skillSvc.GetByID(ctx, id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load skill %s: %w", id, err)
 		}
@@ -104,4 +136,12 @@ func (s *freelancerService) Update(ctx context.Context, id uuid.UUID, title, des
 
 func (s *freelancerService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *freelancerService) GetFeedForProject(ctx context.Context, projectID uuid.UUID) (*domain.Freelancer, error) {
+	project, err := s.projectDep.GetByID(ctx, projectID)
+	if err != nil {
+		return nil, err
+	}
+	return s.repo.GetBySkillIDs(project.SkillIDs, 1)
 }

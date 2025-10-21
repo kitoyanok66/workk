@@ -805,6 +805,8 @@ components:
           type: string
         full_name:
           type: string
+        role:
+          type: string
         created_at:
           type: string
           format: date-time

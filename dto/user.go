@@ -12,6 +12,7 @@ type UserDTO struct {
 	TelegramUserID   int64     `json:"telegram_user_id"`
 	TelegramUsername string    `json:"telegram_username,omitempty"`
 	Fullname         string    `json:"full_name"`
+	Role             string    `json:"role"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 }
@@ -20,19 +21,21 @@ type UserRequest struct {
 	TelegramUserID   int64  `json:"telegram_user_id"`
 	TelegramUsername string `json:"telegram_username,omitempty"`
 	Fullname         string `json:"full_name"`
+	Role             string `json:"role"`
 }
 
-func NewUserDTO(dm *domain.User) *UserDTO {
-	if dm == nil {
+func NewUserDTO(u *domain.User) *UserDTO {
+	if u == nil {
 		return nil
 	}
 	return &UserDTO{
-		ID:               dm.ID,
-		TelegramUserID:   dm.TelegramUserID,
-		TelegramUsername: dm.TelegramUsername,
-		Fullname:         dm.Fullname,
-		CreatedAt:        dm.CreatedAt,
-		UpdatedAt:        dm.UpdatedAt,
+		ID:               u.ID,
+		TelegramUserID:   u.TelegramUserID,
+		TelegramUsername: u.TelegramUsername,
+		Fullname:         u.Fullname,
+		Role:             u.Role,
+		CreatedAt:        u.CreatedAt,
+		UpdatedAt:        u.UpdatedAt,
 	}
 }
 
@@ -45,6 +48,7 @@ func (dto *UserDTO) ToDomain() *domain.User {
 		TelegramUserID:   dto.TelegramUserID,
 		TelegramUsername: dto.TelegramUsername,
 		Fullname:         dto.Fullname,
+		Role:             dto.Role,
 		CreatedAt:        dto.CreatedAt,
 		UpdatedAt:        dto.UpdatedAt,
 	}

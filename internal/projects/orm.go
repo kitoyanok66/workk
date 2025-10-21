@@ -17,7 +17,7 @@ type ProjectORM struct {
 	Deadline    time.Time          `gorm:"type:timestamp"`
 	CreatedAt   time.Time          `gorm:"default:now()"`
 	UpdatedAt   time.Time          `gorm:"default:now()"`
-	Skills      []*skills.SkillORM `gorm:"many2many:project_skills;constraint:OnDelete:CASCADE"`
+	Skills      []*skills.SkillORM `gorm:"many2many:project_skills;joinForeignKey:ProjectID;joinReferences:SkillID;constraint:OnDelete:CASCADE"`
 }
 
 func (ProjectORM) TableName() string {

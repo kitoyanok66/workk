@@ -12,6 +12,7 @@ type UserORM struct {
 	TelegramUserID   int64     `gorm:"unique;not null"`
 	TelegramUsername string    `gorm:"type:text"`
 	Fullname         string    `gorm:"column:full_name;type:text;not null"`
+	Role             string    `gorm:"type:text"`
 	CreatedAt        time.Time `gorm:"default:now()"`
 	UpdatedAt        time.Time `gorm:"default:now()"`
 }
@@ -29,6 +30,7 @@ func (o *UserORM) ToDomain() *domain.User {
 		TelegramUserID:   o.TelegramUserID,
 		TelegramUsername: o.TelegramUsername,
 		Fullname:         o.Fullname,
+		Role:             o.Role,
 		CreatedAt:        o.CreatedAt,
 		UpdatedAt:        o.UpdatedAt,
 	}
@@ -43,6 +45,7 @@ func FromDomain(u *domain.User) *UserORM {
 		TelegramUserID:   u.TelegramUserID,
 		TelegramUsername: u.TelegramUsername,
 		Fullname:         u.Fullname,
+		Role:             u.Role,
 		CreatedAt:        u.CreatedAt,
 		UpdatedAt:        u.UpdatedAt,
 	}

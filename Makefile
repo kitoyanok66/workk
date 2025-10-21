@@ -44,6 +44,10 @@ gen:
 	oapi-codegen -config openapi/.openapi -include-tags skills -package oskills openapi/openapi.yaml > ./internal/web/oskills/api.gen.go
 	oapi-codegen -config openapi/.openapi -include-tags users -package ousers openapi/openapi.yaml > ./internal/web/ousers/api.gen.go
 
+# Запуск wire
+wire:
+	wire ./internal/app/
+
 # Запуск приложения
 run:
 	go run cmd/main.go

@@ -19,7 +19,7 @@ type FreelancerORM struct {
 	Rating          float64            `gorm:"type:float;default:0"`
 	CreatedAt       time.Time          `gorm:"default:now()"`
 	UpdatedAt       time.Time          `gorm:"default:now()"`
-	Skills          []*skills.SkillORM `gorm:"many2many:freelancer_skills;constraint:OnDelete:CASCADE"`
+	Skills          []*skills.SkillORM `gorm:"many2many:freelancer_skills;joinForeignKey:FreelancerID;joinReferences:SkillID;constraint:OnDelete:CASCADE"`
 }
 
 func (FreelancerORM) TableName() string {
