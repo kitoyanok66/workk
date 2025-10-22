@@ -11,6 +11,7 @@ import (
 	"github.com/kitoyanok66/workk/internal/db"
 	"github.com/kitoyanok66/workk/internal/freelancers"
 	"github.com/kitoyanok66/workk/internal/likes"
+	"github.com/kitoyanok66/workk/internal/matches"
 	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/skills"
 	"github.com/kitoyanok66/workk/internal/users"
@@ -33,8 +34,10 @@ func InitApp(cfg *config.Config) (*App, error) {
 	freelancerRepository := freelancers.NewFreelancerRepository(gormDB)
 	freelancerService := freelancers.NewFreelancerService(freelancerRepository, skillService, userService)
 	likeRepository := likes.NewLikeRepository(gormDB)
-	likeService := likes.NewLikeService(likeRepository)
-	app := NewApp(gormDB, userService, skillService, projectService, freelancerService, likeService)
+	matchRepository := matches.NewMatchRepository(gormDB)
+	matchService := matches.NewMatchService(matchRepository)
+	likeService := likes.NewLikeService(likeRepository, userService, freelancerService, projectService, matchService)
+	app := NewApp(gormDB, userService, skillService, projectService, freelancerService, likeService, matchService)
 	return app, nil
 }
 
@@ -47,6 +50,7 @@ type App struct {
 	ProjectService    projects.ProjectService
 	FreelancerService freelancers.FreelancerService
 	LikeService       likes.LikeService
+	MatchService      matches.MatchService
 }
 
 func NewApp(db2 *gorm.DB,
@@ -55,6 +59,7 @@ func NewApp(db2 *gorm.DB,
 	projectSvc projects.ProjectService,
 	freelancerSvc freelancers.FreelancerService,
 	likeSvc likes.LikeService,
+	matchSvc matches.MatchService,
 ) *App {
 	fAdapter := freelancers.NewFreelancerFetcherAdapter(freelancerSvc)
 	pAdapter := projects.NewProjectFetcherAdapter(projectSvc)
@@ -69,5 +74,6 @@ func NewApp(db2 *gorm.DB,
 		ProjectService:    projectSvc,
 		FreelancerService: freelancerSvc,
 		LikeService:       likeSvc,
+		MatchService:      matchSvc,
 	}
 }

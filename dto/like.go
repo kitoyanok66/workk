@@ -15,7 +15,18 @@ type LikeDTO struct {
 }
 
 type LikeRequest struct {
-	ToUserID uuid.UUID `json:"to_user_id"`
+	FromUserID uuid.UUID `json:"from_user_id"`
+	ToUserID   uuid.UUID `json:"to_user_id"`
+}
+
+type LikeResponse struct {
+	Like  *LikeDTO    `json:"like"`
+	Match *MatchDTO   `json:"match,omitempty"`
+	Next  interface{} `json:"next"`
+}
+
+type DislikeResponse struct {
+	Next interface{} `json:"next"`
 }
 
 func NewLikeDTO(l *domain.Like) *LikeDTO {

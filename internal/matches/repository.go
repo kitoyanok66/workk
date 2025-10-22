@@ -12,6 +12,7 @@ import (
 type MatchRepository interface {
 	GetAll(ctx context.Context) ([]*domain.Match, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.Match, error)
+	GetLastBetween(ctx context.Context, freelancerID, projectID uuid.UUID) (*domain.Match, error)
 	Create(ctx context.Context, match *domain.Match) error
 }
 
@@ -19,7 +20,7 @@ type matchRepository struct {
 	db *gorm.DB
 }
 
-func NewLikeRepository(db *gorm.DB) MatchRepository {
+func NewMatchRepository(db *gorm.DB) MatchRepository {
 	return &matchRepository{db: db}
 }
 
@@ -43,6 +44,24 @@ func (r *matchRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Ma
 		}
 		return nil, err
 	}
+	return ormMatch.ToDomain(), nil
+}
+
+func (r *matchRepository) GetLastBetween(ctx context.Context, freelancerID, projectID uuid.UUID) (*domain.Match, error) {
+	var ormMatch MatchORM
+	err := r.db.WithContext(ctx).
+		Where("(freelancer_id = ? AND project_id = ?) OR (freelancer_id = ? AND project_id = ?)",
+			freelancerID, projectID, projectID, freelancerID).
+		Order("created_at DESC").
+		First(&ormMatch).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
 	return ormMatch.ToDomain(), nil
 }
 

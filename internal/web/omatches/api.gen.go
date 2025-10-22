@@ -4,17 +4,77 @@
 package omatches
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	dto "github.com/kitoyanok66/workk/dto"
 	"github.com/labstack/echo/v4"
+	"github.com/oapi-codegen/runtime"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Error defines model for Error.
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// FreelancerDTO Data Transfer Object representing a freelancer.
+type FreelancerDTO = dto.FreelancerDTO
+
+// MatchDTO Data Transfer Object representing a match between freelancer and project
+type MatchDTO = dto.MatchDTO
+
+// ProjectDTO Data Transfer Object representing a project.
+type ProjectDTO = dto.ProjectDTO
+
+// SkillDTO Data Transfer Object representing a skill.
+type SkillDTO = dto.SkillDTO
+
+// UserDTO Data Transfer Object representing a user.
+type UserDTO = dto.UserDTO
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Get all matches
+	// (GET /matches)
+	GetMatches(ctx echo.Context) error
+	// Get match by ID
+	// (GET /matches/{id})
+	GetMatchesId(ctx echo.Context, id openapi_types.UUID) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// GetMatches converts echo context to params.
+func (w *ServerInterfaceWrapper) GetMatches(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetMatches(ctx)
+	return err
+}
+
+// GetMatchesId converts echo context to params.
+func (w *ServerInterfaceWrapper) GetMatchesId(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "id", runtime.ParamLocationPath, ctx.Param("id"), &id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter id: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetMatchesId(ctx, id)
+	return err
 }
 
 // This is a simple interface which specifies echo.Route addition functions which
@@ -41,10 +101,92 @@ func RegisterHandlers(router EchoRouter, si ServerInterface) {
 // can be served under a prefix.
 func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL string) {
 
+	wrapper := ServerInterfaceWrapper{
+		Handler: si,
+	}
+
+	router.GET(baseURL+"/matches", wrapper.GetMatches)
+	router.GET(baseURL+"/matches/:id", wrapper.GetMatchesId)
+
+}
+
+type GetMatchesRequestObject struct {
+}
+
+type GetMatchesResponseObject interface {
+	VisitGetMatchesResponse(w http.ResponseWriter) error
+}
+
+type GetMatches200JSONResponse []MatchDTO
+
+func (response GetMatches200JSONResponse) VisitGetMatchesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMatches500JSONResponse Error
+
+func (response GetMatches500JSONResponse) VisitGetMatchesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMatchesIdRequestObject struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+type GetMatchesIdResponseObject interface {
+	VisitGetMatchesIdResponse(w http.ResponseWriter) error
+}
+
+type GetMatchesId200JSONResponse MatchDTO
+
+func (response GetMatchesId200JSONResponse) VisitGetMatchesIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMatchesId400JSONResponse Error
+
+func (response GetMatchesId400JSONResponse) VisitGetMatchesIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMatchesId404JSONResponse Error
+
+func (response GetMatchesId404JSONResponse) VisitGetMatchesIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMatchesId500JSONResponse Error
+
+func (response GetMatchesId500JSONResponse) VisitGetMatchesIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Get all matches
+	// (GET /matches)
+	GetMatches(ctx context.Context, request GetMatchesRequestObject) (GetMatchesResponseObject, error)
+	// Get match by ID
+	// (GET /matches/{id})
+	GetMatchesId(ctx context.Context, request GetMatchesIdRequestObject) (GetMatchesIdResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -57,4 +199,52 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// GetMatches operation middleware
+func (sh *strictHandler) GetMatches(ctx echo.Context) error {
+	var request GetMatchesRequestObject
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMatches(ctx.Request().Context(), request.(GetMatchesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMatches")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetMatchesResponseObject); ok {
+		return validResponse.VisitGetMatchesResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetMatchesId operation middleware
+func (sh *strictHandler) GetMatchesId(ctx echo.Context, id openapi_types.UUID) error {
+	var request GetMatchesIdRequestObject
+
+	request.Id = id
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMatchesId(ctx.Request().Context(), request.(GetMatchesIdRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMatchesId")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetMatchesIdResponseObject); ok {
+		return validResponse.VisitGetMatchesIdResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }

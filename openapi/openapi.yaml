@@ -12,8 +12,145 @@ tags:
     description: Endpoints for managing freelancers and retrieving freelancer information.
   - name: projects
     description: Endpoints for managing projects and retrieving project information.
+  - name: likes
+    description: Endpoints for managing likes between users (freelancers <-> projects).
+  - name: matches
+    description: Endpoints for managing matches and retrieving match information.
 
 paths:
+  /matches:
+    get:
+      summary: Get all matches
+      description: Returns list of all matches in the system.
+      tags:
+        - matches
+      responses:
+        200:
+          description: Successfully fetched matches.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchDTO'
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /matches/{id}:
+    get:
+      summary: Get match by ID
+      description: Retrieves detailed information about a specific match by their unique ID.
+      tags:
+        - matches
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Match found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchDTO'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Match not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /likes/like:
+    post:
+      summary: Like a freelancer or project
+      description: Adds a like from one user to another user. Returns the created like and optionally the next suggestion.
+      tags:
+        - likes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeRequest'
+      responses:
+        200:
+          description: Like successfully created, get next card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeResponse'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /likes/dislike:
+    post:
+      summary: Dislike a freelancer or project
+      description: Marks a user or project as disliked. Returns the next suggestion.
+      tags:
+        - likes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeRequest'
+      responses:
+        200:
+          description: Dislike recorded successfully, get next card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DislikeResponse'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /projects:
     get:
       summary: Get all projects
@@ -629,6 +766,89 @@ paths:
 
 components:
   schemas:
+    MatchDTO:
+      x-go-type: dto.MatchDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Data Transfer Object representing a match between freelancer and project
+      properties:
+        id:
+          type: string
+          format: uuid
+        freelancer:
+          $ref: '#/components/schemas/FreelancerDTO'
+        project:
+          $ref: '#/components/schemas/ProjectDTO'
+        freelancer_user:
+          $ref: '#/components/schemas/UserDTO'
+        project_user:
+          $ref: '#/components/schemas/UserDTO'
+        created_at:
+          type: string
+          format: date-time
+    LikeDTO:
+      x-go-type: dto.LikeDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Data Transfer Object representing a like.
+      properties:
+        id:
+          type: string
+          format: uuid
+        from_user_id:
+          type: string
+          format: uuid
+        to_user_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+    LikeRequest:
+      x-go-type: dto.LikeRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for creating a like or dislike.
+      properties:
+        from_user_id:
+          type: string
+          format: uuid
+        to_user_id:
+          type: string
+          format: uuid
+    LikeResponse:
+      x-go-type: dto.LikeResponse
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Response body for creating a like and next card.
+      properties:
+        like:
+          $ref: '#/components/schemas/LikeDTO'
+        match:
+          $ref: '#/components/schemas/MatchDTO'
+          nullable: true
+        next:
+          type: object
+          description: Next card (freelancer or project)
+    DislikeResponse:
+      x-go-type: dto.DislikeResponse
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Response body for creating a dislike and next card.
+      properties:
+        next:
+          type: object
+          description: Next card (freelancer or project)
     ProjectDTO:
       x-go-type: dto.ProjectDTO
       x-go-type-import:

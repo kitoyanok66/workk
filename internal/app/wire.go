@@ -9,6 +9,7 @@ import (
 	"github.com/kitoyanok66/workk/internal/db"
 	"github.com/kitoyanok66/workk/internal/freelancers"
 	"github.com/kitoyanok66/workk/internal/likes"
+	"github.com/kitoyanok66/workk/internal/matches"
 	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/skills"
 	"github.com/kitoyanok66/workk/internal/users"
@@ -22,6 +23,7 @@ type App struct {
 	ProjectService    projects.ProjectService
 	FreelancerService freelancers.FreelancerService
 	LikeService       likes.LikeService
+	MatchService      matches.MatchService
 }
 
 func InitApp(cfg *config.Config) (*App, error) {
@@ -31,12 +33,14 @@ func InitApp(cfg *config.Config) (*App, error) {
 		users.NewUserRepository,
 		skills.NewSkillRepository,
 		likes.NewLikeRepository,
+		matches.NewMatchRepository,
 		freelancers.NewFreelancerRepository,
 		projects.NewProjectRepository,
 
 		users.NewUserService,
 		skills.NewSkillService,
 		likes.NewLikeService,
+		matches.NewMatchService,
 		freelancers.NewFreelancerService,
 		projects.NewProjectService,
 
@@ -52,6 +56,7 @@ func NewApp(
 	projectSvc projects.ProjectService,
 	freelancerSvc freelancers.FreelancerService,
 	likeSvc likes.LikeService,
+	matchSvc matches.MatchService,
 ) *App {
 	fAdapter := freelancers.NewFreelancerFetcherAdapter(freelancerSvc)
 	pAdapter := projects.NewProjectFetcherAdapter(projectSvc)
@@ -66,5 +71,6 @@ func NewApp(
 		ProjectService:    projectSvc,
 		FreelancerService: freelancerSvc,
 		LikeService:       likeSvc,
+		MatchService:      matchSvc,
 	}
 }

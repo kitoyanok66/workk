@@ -8,26 +8,25 @@ import (
 )
 
 type MatchDTO struct {
-	ID           uuid.UUID `json:"id"`
-	FreelancerID uuid.UUID `json:"freelancer_id"`
-	ProjectID    uuid.UUID `json:"project_id"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID             uuid.UUID      `json:"id"`
+	Freelancer     *FreelancerDTO `json:"freelancer"`
+	Project        *ProjectDTO    `json:"project"`
+	FreelancerUser *UserDTO       `json:"freelancer_user"`
+	ProjectUser    *UserDTO       `json:"project_user"`
+	CreatedAt      time.Time      `json:"created_at"`
 }
 
-type MatchRequest struct {
-	FreelancerID uuid.UUID `json:"freelancer_id"`
-	ProjectID    uuid.UUID `json:"project_id"`
-}
-
-func NewMatchDTO(m *domain.Match) *MatchDTO {
+func NewMatchDTO(m *domain.Match, freelancer *domain.Freelancer, project *domain.Project, freelancerUser *domain.User, projectUser *domain.User) *MatchDTO {
 	if m == nil {
 		return nil
 	}
 	return &MatchDTO{
-		ID:           m.ID,
-		FreelancerID: m.FreelancerID,
-		ProjectID:    m.ProjectID,
-		CreatedAt:    m.CreatedAt,
+		ID:             m.ID,
+		Freelancer:     NewFreelancerDTO(freelancer),
+		Project:        NewProjectDTO(project),
+		FreelancerUser: NewUserDTO(freelancerUser),
+		ProjectUser:    NewUserDTO(projectUser),
+		CreatedAt:      m.CreatedAt,
 	}
 }
 
@@ -35,10 +34,19 @@ func (dto *MatchDTO) ToDomain() *domain.Match {
 	if dto == nil {
 		return nil
 	}
+
+	var freelancerID, projectID uuid.UUID
+	if dto.Freelancer != nil {
+		freelancerID = dto.Freelancer.ID
+	}
+	if dto.Project != nil {
+		projectID = dto.Project.ID
+	}
+
 	return &domain.Match{
 		ID:           dto.ID,
-		FreelancerID: dto.FreelancerID,
-		ProjectID:    dto.ProjectID,
+		FreelancerID: freelancerID,
+		ProjectID:    projectID,
 		CreatedAt:    dto.CreatedAt,
 	}
 }

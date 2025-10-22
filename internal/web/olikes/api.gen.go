@@ -4,17 +4,86 @@
 package olikes
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+
+	dto "github.com/kitoyanok66/workk/dto"
 	"github.com/labstack/echo/v4"
 	strictecho "github.com/oapi-codegen/runtime/strictmiddleware/echo"
 )
 
+// DislikeResponse Response body for creating a dislike and next card.
+type DislikeResponse = dto.DislikeResponse
+
+// Error defines model for Error.
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// FreelancerDTO Data Transfer Object representing a freelancer.
+type FreelancerDTO = dto.FreelancerDTO
+
+// LikeDTO Data Transfer Object representing a like.
+type LikeDTO = dto.LikeDTO
+
+// LikeRequest Request body for creating a like or dislike.
+type LikeRequest = dto.LikeRequest
+
+// LikeResponse Response body for creating a like and next card.
+type LikeResponse = dto.LikeResponse
+
+// MatchDTO Data Transfer Object representing a match between freelancer and project
+type MatchDTO = dto.MatchDTO
+
+// ProjectDTO Data Transfer Object representing a project.
+type ProjectDTO = dto.ProjectDTO
+
+// SkillDTO Data Transfer Object representing a skill.
+type SkillDTO = dto.SkillDTO
+
+// UserDTO Data Transfer Object representing a user.
+type UserDTO = dto.UserDTO
+
+// PostLikesDislikeJSONRequestBody defines body for PostLikesDislike for application/json ContentType.
+type PostLikesDislikeJSONRequestBody = LikeRequest
+
+// PostLikesLikeJSONRequestBody defines body for PostLikesLike for application/json ContentType.
+type PostLikesLikeJSONRequestBody = LikeRequest
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Dislike a freelancer or project
+	// (POST /likes/dislike)
+	PostLikesDislike(ctx echo.Context) error
+	// Like a freelancer or project
+	// (POST /likes/like)
+	PostLikesLike(ctx echo.Context) error
 }
 
 // ServerInterfaceWrapper converts echo contexts to parameters.
 type ServerInterfaceWrapper struct {
 	Handler ServerInterface
+}
+
+// PostLikesDislike converts echo context to params.
+func (w *ServerInterfaceWrapper) PostLikesDislike(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostLikesDislike(ctx)
+	return err
+}
+
+// PostLikesLike converts echo context to params.
+func (w *ServerInterfaceWrapper) PostLikesLike(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.PostLikesLike(ctx)
+	return err
 }
 
 // This is a simple interface which specifies echo.Route addition functions which
@@ -41,10 +110,111 @@ func RegisterHandlers(router EchoRouter, si ServerInterface) {
 // can be served under a prefix.
 func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL string) {
 
+	wrapper := ServerInterfaceWrapper{
+		Handler: si,
+	}
+
+	router.POST(baseURL+"/likes/dislike", wrapper.PostLikesDislike)
+	router.POST(baseURL+"/likes/like", wrapper.PostLikesLike)
+
+}
+
+type PostLikesDislikeRequestObject struct {
+	Body *PostLikesDislikeJSONRequestBody
+}
+
+type PostLikesDislikeResponseObject interface {
+	VisitPostLikesDislikeResponse(w http.ResponseWriter) error
+}
+
+type PostLikesDislike200JSONResponse DislikeResponse
+
+func (response PostLikesDislike200JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesDislike400JSONResponse Error
+
+func (response PostLikesDislike400JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesDislike404JSONResponse Error
+
+func (response PostLikesDislike404JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesDislike500JSONResponse Error
+
+func (response PostLikesDislike500JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesLikeRequestObject struct {
+	Body *PostLikesLikeJSONRequestBody
+}
+
+type PostLikesLikeResponseObject interface {
+	VisitPostLikesLikeResponse(w http.ResponseWriter) error
+}
+
+type PostLikesLike200JSONResponse LikeResponse
+
+func (response PostLikesLike200JSONResponse) VisitPostLikesLikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesLike400JSONResponse Error
+
+func (response PostLikesLike400JSONResponse) VisitPostLikesLikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesLike404JSONResponse Error
+
+func (response PostLikesLike404JSONResponse) VisitPostLikesLikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesLike500JSONResponse Error
+
+func (response PostLikesLike500JSONResponse) VisitPostLikesLikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// Dislike a freelancer or project
+	// (POST /likes/dislike)
+	PostLikesDislike(ctx context.Context, request PostLikesDislikeRequestObject) (PostLikesDislikeResponseObject, error)
+	// Like a freelancer or project
+	// (POST /likes/like)
+	PostLikesLike(ctx context.Context, request PostLikesLikeRequestObject) (PostLikesLikeResponseObject, error)
 }
 
 type StrictHandlerFunc = strictecho.StrictEchoHandlerFunc
@@ -57,4 +227,62 @@ func NewStrictHandler(ssi StrictServerInterface, middlewares []StrictMiddlewareF
 type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
+}
+
+// PostLikesDislike operation middleware
+func (sh *strictHandler) PostLikesDislike(ctx echo.Context) error {
+	var request PostLikesDislikeRequestObject
+
+	var body PostLikesDislikeJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostLikesDislike(ctx.Request().Context(), request.(PostLikesDislikeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostLikesDislike")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostLikesDislikeResponseObject); ok {
+		return validResponse.VisitPostLikesDislikeResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// PostLikesLike operation middleware
+func (sh *strictHandler) PostLikesLike(ctx echo.Context) error {
+	var request PostLikesLikeRequestObject
+
+	var body PostLikesLikeJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.PostLikesLike(ctx.Request().Context(), request.(PostLikesLikeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PostLikesLike")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(PostLikesLikeResponseObject); ok {
+		return validResponse.VisitPostLikesLikeResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
 }

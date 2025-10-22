@@ -7,6 +7,8 @@ import (
 	"github.com/kitoyanok66/workk/internal/app"
 	"github.com/kitoyanok66/workk/internal/web"
 	"github.com/kitoyanok66/workk/internal/web/ofreelancers"
+	"github.com/kitoyanok66/workk/internal/web/olikes"
+	"github.com/kitoyanok66/workk/internal/web/omatches"
 	"github.com/kitoyanok66/workk/internal/web/oprojects"
 	"github.com/kitoyanok66/workk/internal/web/oskills"
 	"github.com/kitoyanok66/workk/internal/web/ousers"
@@ -41,6 +43,14 @@ func main() {
 	projectHandler := web.NewProjectHandler(a.ProjectService)
 	strictProjectHandler := oprojects.NewStrictHandler(projectHandler, nil)
 	oprojects.RegisterHandlers(e, strictProjectHandler)
+
+	likeHandler := web.NewLikeHandler(a.LikeService, a.MatchService, a.FreelancerService, a.ProjectService, a.UserService)
+	strictLikeHandler := olikes.NewStrictHandler(likeHandler, nil)
+	olikes.RegisterHandlers(e, strictLikeHandler)
+
+	matchHanlder := web.NewMatchHandler(a.MatchService, a.FreelancerService, a.ProjectService, a.UserService)
+	strictMatchHandler := omatches.NewStrictHandler(matchHanlder, nil)
+	omatches.RegisterHandlers(e, strictMatchHandler)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatalf("failed to start with error: %v", err)
