@@ -71,24 +71,71 @@ func (s *likeService) Like(ctx context.Context, fromUserID, toUserID uuid.UUID) 
 		return nil, errors.New("user IDs must not be empty")
 	}
 
-	like, err := domain.NewLike(fromUserID, toUserID)
+	fromUser, err := s.userSvc.GetByID(ctx, fromUserID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get fromUser: %w", err)
+	}
+	if fromUser == nil {
+		return nil, fmt.Errorf("user not found: %s", fromUserID)
 	}
 
+	toUser, err := s.userSvc.GetByID(ctx, toUserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get toUser: %w", err)
+	}
+	if toUser == nil {
+		return nil, fmt.Errorf("user not found: %s", toUserID)
+	}
+
+	like, err := domain.NewLike(fromUserID, toUserID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create like: %w", err)
+	}
 	if err := s.repo.Create(ctx, like); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to save like: %w", err)
 	}
 
 	exists, err := s.repo.ExistsReverse(ctx, fromUserID, toUserID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to check reverse like: %w", err)
 	}
-	if exists {
-		_, err := s.matchSvc.Create(ctx, fromUserID, toUserID)
+	if !exists {
+		return like, nil
+	}
+
+	var freelancerID, projectID uuid.UUID
+
+	switch fromUser.Role {
+	case "freelancer":
+		freelancer, err := s.freelancerSvc.GetByUserID(ctx, fromUserID)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get freelancer by user id: %w", err)
 		}
+		project, err := s.projectSvc.GetByUserID(ctx, toUserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get project by user id: %w", err)
+		}
+		freelancerID = freelancer.ID
+		projectID = project.ID
+
+	case "project":
+		project, err := s.projectSvc.GetByUserID(ctx, fromUserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get project by user id: %w", err)
+		}
+		freelancer, err := s.freelancerSvc.GetByUserID(ctx, toUserID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get freelancer by user id: %w", err)
+		}
+		freelancerID = freelancer.ID
+		projectID = project.ID
+
+	default:
+		return nil, fmt.Errorf("unsupported role for matching: %s", fromUser.Role)
+	}
+
+	if _, err := s.matchSvc.Create(ctx, freelancerID, projectID); err != nil {
+		return nil, fmt.Errorf("failed to create match: %w", err)
 	}
 
 	return like, nil

@@ -3,7 +3,7 @@ CREATE TABLE users (
     telegram_user_id BIGINT UNIQUE NOT NULL,
     telegram_username TEXT,
     full_name TEXT NOT NULL,
-    role TEXT CHECK (role IN ('freelancer', 'project', 'undefind'))
+    role TEXT CHECK (role IN ('freelancer', 'project', 'undefind')),
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now()
 );
