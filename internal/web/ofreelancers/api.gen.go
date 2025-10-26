@@ -179,6 +179,15 @@ func (response GetFreelancers200JSONResponse) VisitGetFreelancersResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetFreelancers401JSONResponse Error
+
+func (response GetFreelancers401JSONResponse) VisitGetFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetFreelancers500JSONResponse Error
 
 func (response GetFreelancers500JSONResponse) VisitGetFreelancersResponse(w http.ResponseWriter) error {
@@ -210,6 +219,15 @@ type PostFreelancers400JSONResponse Error
 func (response PostFreelancers400JSONResponse) VisitPostFreelancersResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostFreelancers401JSONResponse Error
+
+func (response PostFreelancers401JSONResponse) VisitPostFreelancersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -248,11 +266,38 @@ func (response DeleteFreelancersId400JSONResponse) VisitDeleteFreelancersIdRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteFreelancersId401JSONResponse Error
+
+func (response DeleteFreelancersId401JSONResponse) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteFreelancersId403JSONResponse Error
+
+func (response DeleteFreelancersId403JSONResponse) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteFreelancersId404JSONResponse Error
 
 func (response DeleteFreelancersId404JSONResponse) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteFreelancersId500JSONResponse Error
+
+func (response DeleteFreelancersId500JSONResponse) VisitDeleteFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -279,6 +324,15 @@ type GetFreelancersId400JSONResponse Error
 func (response GetFreelancersId400JSONResponse) VisitGetFreelancersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersId401JSONResponse Error
+
+func (response GetFreelancersId401JSONResponse) VisitGetFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -328,11 +382,38 @@ func (response PatchFreelancersId400JSONResponse) VisitPatchFreelancersIdRespons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PatchFreelancersId401JSONResponse Error
+
+func (response PatchFreelancersId401JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchFreelancersId403JSONResponse Error
+
+func (response PatchFreelancersId403JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PatchFreelancersId404JSONResponse Error
 
 func (response PatchFreelancersId404JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchFreelancersId500JSONResponse Error
+
+func (response PatchFreelancersId500JSONResponse) VisitPatchFreelancersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }

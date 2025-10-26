@@ -1,9 +1,7 @@
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    telegram_user_id BIGINT UNIQUE NOT NULL,
-    telegram_username TEXT,
     full_name TEXT NOT NULL,
-    role TEXT CHECK (role IN ('freelancer', 'project', 'undefind')),
+    role TEXT CHECK (role IN ('freelancer', 'project', 'undefined')),
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now()
 );

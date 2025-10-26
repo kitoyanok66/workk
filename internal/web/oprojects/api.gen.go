@@ -179,6 +179,15 @@ func (response GetProjects200JSONResponse) VisitGetProjectsResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetProjects401JSONResponse Error
+
+func (response GetProjects401JSONResponse) VisitGetProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetProjects500JSONResponse Error
 
 func (response GetProjects500JSONResponse) VisitGetProjectsResponse(w http.ResponseWriter) error {
@@ -210,6 +219,15 @@ type PostProjects400JSONResponse Error
 func (response PostProjects400JSONResponse) VisitPostProjectsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostProjects401JSONResponse Error
+
+func (response PostProjects401JSONResponse) VisitPostProjectsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -248,11 +266,38 @@ func (response DeleteProjectsId400JSONResponse) VisitDeleteProjectsIdResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteProjectsId401JSONResponse Error
+
+func (response DeleteProjectsId401JSONResponse) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteProjectsId403JSONResponse Error
+
+func (response DeleteProjectsId403JSONResponse) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteProjectsId404JSONResponse Error
 
 func (response DeleteProjectsId404JSONResponse) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteProjectsId500JSONResponse Error
+
+func (response DeleteProjectsId500JSONResponse) VisitDeleteProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -279,6 +324,15 @@ type GetProjectsId400JSONResponse Error
 func (response GetProjectsId400JSONResponse) VisitGetProjectsIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsId401JSONResponse Error
+
+func (response GetProjectsId401JSONResponse) VisitGetProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -328,11 +382,38 @@ func (response PatchProjectsId400JSONResponse) VisitPatchProjectsIdResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PatchProjectsId401JSONResponse Error
+
+func (response PatchProjectsId401JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchProjectsId403JSONResponse Error
+
+func (response PatchProjectsId403JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PatchProjectsId404JSONResponse Error
 
 func (response PatchProjectsId404JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchProjectsId500JSONResponse Error
+
+func (response PatchProjectsId500JSONResponse) VisitPatchProjectsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }

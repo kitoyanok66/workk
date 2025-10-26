@@ -126,6 +126,15 @@ func (response GetMatches200JSONResponse) VisitGetMatchesResponse(w http.Respons
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetMatches401JSONResponse Error
+
+func (response GetMatches401JSONResponse) VisitGetMatchesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetMatches500JSONResponse Error
 
 func (response GetMatches500JSONResponse) VisitGetMatchesResponse(w http.ResponseWriter) error {
@@ -157,6 +166,15 @@ type GetMatchesId400JSONResponse Error
 func (response GetMatchesId400JSONResponse) VisitGetMatchesIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetMatchesId401JSONResponse Error
+
+func (response GetMatchesId401JSONResponse) VisitGetMatchesIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }

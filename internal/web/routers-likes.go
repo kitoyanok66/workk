@@ -2,14 +2,13 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/dto"
 	"github.com/kitoyanok66/workk/internal/freelancers"
 	"github.com/kitoyanok66/workk/internal/likes"
 	"github.com/kitoyanok66/workk/internal/matches"
+	"github.com/kitoyanok66/workk/internal/middleware"
 	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/users"
 	"github.com/kitoyanok66/workk/internal/web/olikes"
@@ -33,66 +32,36 @@ func NewLikeHandler(svc likes.LikeService, matchSvc matches.MatchService, freela
 	}
 }
 
-func (h *likeHandler) resolvePair(ctx context.Context, fromUserID, toUserID uuid.UUID) (freelancerID, projectID uuid.UUID, err error) {
-	fromUser, err := h.userSvc.GetByID(ctx, fromUserID)
-	if err != nil {
-		return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get fromUser: %w", err)
-	}
-	if fromUser == nil {
-		return uuid.Nil, uuid.Nil, fmt.Errorf("fromUser not found")
-	}
-
-	toUser, err := h.userSvc.GetByID(ctx, toUserID)
-	if err != nil {
-		return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get toUser: %w", err)
-	}
-	if toUser == nil {
-		return uuid.Nil, uuid.Nil, fmt.Errorf("toUser not found")
-	}
-
-	switch {
-	case fromUser.Role == "freelancer" && toUser.Role == "project":
-		freelancer, err := h.freelancerSvc.GetByUserID(ctx, fromUser.ID)
-		if err != nil {
-			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get freelancer by fromUserID: %w", err)
-		}
-		project, err := h.projectSvc.GetByUserID(ctx, toUser.ID)
-		if err != nil {
-			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get project by toUserID: %w", err)
-		}
-		return freelancer.ID, project.ID, nil
-
-	case fromUser.Role == "project" && toUser.Role == "freelancer":
-		freelancer, err := h.freelancerSvc.GetByUserID(ctx, toUser.ID)
-		if err != nil {
-			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get freelancer by toUserID: %w", err)
-		}
-		project, err := h.projectSvc.GetByUserID(ctx, fromUser.ID)
-		if err != nil {
-			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get project by fromUserID: %w", err)
-		}
-		return freelancer.ID, project.ID, nil
-
-	default:
-		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid role combination: %s -> %s", fromUser.Role, toUser.Role)
-	}
-}
-
 // POST /likes/like
 func (h *likeHandler) PostLikesLike(ctx context.Context, request olikes.PostLikesLikeRequestObject) (olikes.PostLikesLikeResponseObject, error) {
-	body := request.Body
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return olikes.PostLikesLike401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
 
-	like, err := h.svc.Like(ctx, body.FromUserID, body.ToUserID)
+	body := request.Body
+	toUserID := body.ToUserID
+
+	like, err := h.svc.Like(ctx, userID, toUserID)
 	if err != nil {
 		return olikes.PostLikesLike400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}
 
-	nextCard, err := h.svc.GetFeed(ctx, body.FromUserID)
+	nextCard, err := h.svc.GetFeed(ctx, userID)
 	if err != nil {
 		return olikes.PostLikesLike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, "failed to get next card: "+err.Error())), nil
 	}
 
-	freelancerID, projectID, err := h.resolvePair(ctx, body.FromUserID, body.ToUserID)
+	fromUser, err := h.userSvc.GetByID(ctx, userID)
+	if err != nil || fromUser == nil {
+		return olikes.PostLikesLike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, "failed to get fromUser")), nil
+	}
+	toUser, err := h.userSvc.GetByID(ctx, toUserID)
+	if err != nil || toUser == nil {
+		return olikes.PostLikesLike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, "failed to get toUser")), nil
+	}
+
+	freelancerID, projectID, err := h.svc.ResolvePair(ctx, fromUser, toUser)
 	if err != nil {
 		return olikes.PostLikesLike200JSONResponse(dto.LikeResponse{
 			Like: dto.NewLikeDTO(like),
@@ -139,13 +108,19 @@ func (h *likeHandler) PostLikesLike(ctx context.Context, request olikes.PostLike
 
 // POST /likes/dislike
 func (h *likeHandler) PostLikesDislike(ctx context.Context, request olikes.PostLikesDislikeRequestObject) (olikes.PostLikesDislikeResponseObject, error) {
-	body := request.Body
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return olikes.PostLikesDislike401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
 
-	if err := h.svc.Dislike(ctx, body.FromUserID, body.ToUserID); err != nil {
+	body := request.Body
+	toUserID := body.ToUserID
+
+	if err := h.svc.Dislike(ctx, userID, toUserID); err != nil {
 		return olikes.PostLikesDislike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
 	}
 
-	next, err := h.svc.GetFeed(ctx, body.FromUserID)
+	next, err := h.svc.GetFeed(ctx, userID)
 	if err != nil {
 		return olikes.PostLikesDislike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
 	}

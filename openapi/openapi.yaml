@@ -16,8 +16,47 @@ tags:
     description: Endpoints for managing likes between users (freelancers <-> projects).
   - name: matches
     description: Endpoints for managing matches and retrieving match information.
+  - name: auth
+    description: Endpoints for auth in the system.
 
 paths:
+  /auth:
+    post:
+      summary: Authenticate user via provider (e.g. Telegram, Google, Email)
+      description: Authenticate a user using an external provider. Returns a JWT token and basic user info.
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        200:
+          description: Auth successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /matches:
     get:
       summary: Get all matches
@@ -33,6 +72,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/MatchDTO'
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error.
           content:
@@ -61,6 +106,12 @@ paths:
                 $ref: '#/components/schemas/MatchDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -102,6 +153,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: User not found.
           content:
@@ -139,6 +196,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: User not found.
           content:
@@ -166,6 +229,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProjectDTO'
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error.
           content:
@@ -192,6 +261,12 @@ paths:
                 $ref: '#/components/schemas/ProjectDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -224,6 +299,12 @@ paths:
                 $ref: '#/components/schemas/ProjectDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -271,8 +352,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: Project not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -298,8 +397,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: Project not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -319,6 +436,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FreelancerDTO'
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error.
           content:
@@ -345,6 +468,12 @@ paths:
                 $ref: '#/components/schemas/FreelancerDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -377,6 +506,12 @@ paths:
                 $ref: '#/components/schemas/FreelancerDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -424,8 +559,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: Freelancer not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -451,8 +604,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: Freelancer not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -472,6 +643,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/SkillDTO'
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error.
           content:
@@ -498,6 +675,12 @@ paths:
                 $ref: '#/components/schemas/SkillDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -530,6 +713,12 @@ paths:
                 $ref: '#/components/schemas/SkillDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -577,8 +766,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: Skill not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -604,8 +811,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: Skill not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -625,6 +850,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/UserDTO'
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         500:
           description: Internal Server Error.
           content:
@@ -651,6 +882,12 @@ paths:
                 $ref: '#/components/schemas/UserDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -683,6 +920,12 @@ paths:
                 $ref: '#/components/schemas/UserDTO'
         400:
           description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
           content:
             application/json:
               schema:
@@ -730,8 +973,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -757,8 +1018,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         404:
           description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
           content:
             application/json:
               schema:
@@ -766,6 +1045,63 @@ paths:
 
 components:
   schemas:
+    AuthDTO:
+      x-go-type: dto.AuthDTO
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Data Transfer Object representing a auth.
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        provider:
+          type: string
+        external_id:
+          type: string
+        username:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    AuthRequest:
+      x-go-type: dto.AuthRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for auth.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        provider:
+          type: string
+        external_id:
+          type: string
+        username:
+          type: string
+    AuthResponse:
+      x-go-type: dto.AuthResponse
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Response body for auth.
+      properties:
+        token:
+          type: string
+          description: JWT token valid for 24h
+        user:
+          $ref: '#/components/schemas/UserDTO'
     MatchDTO:
       x-go-type: dto.MatchDTO
       x-go-type-import:

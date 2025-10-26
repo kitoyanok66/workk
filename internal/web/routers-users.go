@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/dto"
+	"github.com/kitoyanok66/workk/internal/middleware"
 	"github.com/kitoyanok66/workk/internal/users"
 	"github.com/kitoyanok66/workk/internal/web/ousers"
 )
@@ -35,12 +35,7 @@ func (h *userHandler) GetUsers(ctx context.Context, _ ousers.GetUsersRequestObje
 
 // GET /users/{id}
 func (h *userHandler) GetUsersId(ctx context.Context, request ousers.GetUsersIdRequestObject) (ousers.GetUsersIdResponseObject, error) {
-	id, err := uuid.Parse(request.Id.String())
-	if err != nil {
-		return ousers.GetUsersId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
-	}
-
-	user, err := h.svc.GetByID(ctx, id)
+	user, err := h.svc.GetByID(ctx, request.Id)
 	if err != nil {
 		return ousers.GetUsersId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
 	}
@@ -55,7 +50,7 @@ func (h *userHandler) GetUsersId(ctx context.Context, request ousers.GetUsersIdR
 func (h *userHandler) PostUsers(ctx context.Context, request ousers.PostUsersRequestObject) (ousers.PostUsersResponseObject, error) {
 	body := request.Body
 
-	createdUser, err := h.svc.Create(ctx, body.TelegramUserID, body.TelegramUsername, body.Fullname)
+	createdUser, err := h.svc.Create(ctx, body.Fullname)
 	if err != nil {
 		return ousers.PostUsers400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}
@@ -65,14 +60,20 @@ func (h *userHandler) PostUsers(ctx context.Context, request ousers.PostUsersReq
 
 // PATCH /users/{id}
 func (h *userHandler) PatchUsersId(ctx context.Context, request ousers.PatchUsersIdRequestObject) (ousers.PatchUsersIdResponseObject, error) {
-	id, err := uuid.Parse(request.Id.String())
-	if err != nil {
-		return ousers.PatchUsersId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return ousers.PatchUsersId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
+	id := request.Id
+
+	if userID != id {
+		return ousers.PatchUsersId403JSONResponse(*dto.NewErrorDTO(http.StatusForbidden, "forbidden")), nil
 	}
 
 	body := request.Body
 
-	updatedUser, err := h.svc.Update(ctx, id, body.Fullname, body.TelegramUsername, body.Role)
+	updatedUser, err := h.svc.Update(ctx, id, body.Fullname, body.Role)
 	if err != nil {
 		return ousers.PatchUsersId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}
@@ -82,8 +83,20 @@ func (h *userHandler) PatchUsersId(ctx context.Context, request ousers.PatchUser
 
 // DELETE /users/{id}
 func (h *userHandler) DeleteUsersId(ctx context.Context, request ousers.DeleteUsersIdRequestObject) (ousers.DeleteUsersIdResponseObject, error) {
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return ousers.DeleteUsersId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
+	id := request.Id
+
+	if userID != id {
+		return ousers.DeleteUsersId403JSONResponse(*dto.NewErrorDTO(http.StatusForbidden, "forbidden")), nil
+	}
+
 	if err := h.svc.Delete(ctx, request.Id); err != nil {
 		return ousers.DeleteUsersId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, err.Error())), nil
 	}
+
 	return ousers.DeleteUsersId204Response{}, nil
 }

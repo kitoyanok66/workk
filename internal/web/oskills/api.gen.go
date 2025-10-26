@@ -176,6 +176,15 @@ func (response GetSkills200JSONResponse) VisitGetSkillsResponse(w http.ResponseW
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetSkills401JSONResponse Error
+
+func (response GetSkills401JSONResponse) VisitGetSkillsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetSkills500JSONResponse Error
 
 func (response GetSkills500JSONResponse) VisitGetSkillsResponse(w http.ResponseWriter) error {
@@ -207,6 +216,15 @@ type PostSkills400JSONResponse Error
 func (response PostSkills400JSONResponse) VisitPostSkillsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostSkills401JSONResponse Error
+
+func (response PostSkills401JSONResponse) VisitPostSkillsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -245,11 +263,38 @@ func (response DeleteSkillsId400JSONResponse) VisitDeleteSkillsIdResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteSkillsId401JSONResponse Error
+
+func (response DeleteSkillsId401JSONResponse) VisitDeleteSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteSkillsId403JSONResponse Error
+
+func (response DeleteSkillsId403JSONResponse) VisitDeleteSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteSkillsId404JSONResponse Error
 
 func (response DeleteSkillsId404JSONResponse) VisitDeleteSkillsIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteSkillsId500JSONResponse Error
+
+func (response DeleteSkillsId500JSONResponse) VisitDeleteSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -276,6 +321,15 @@ type GetSkillsId400JSONResponse Error
 func (response GetSkillsId400JSONResponse) VisitGetSkillsIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetSkillsId401JSONResponse Error
+
+func (response GetSkillsId401JSONResponse) VisitGetSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -325,11 +379,38 @@ func (response PatchSkillsId400JSONResponse) VisitPatchSkillsIdResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PatchSkillsId401JSONResponse Error
+
+func (response PatchSkillsId401JSONResponse) VisitPatchSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchSkillsId403JSONResponse Error
+
+func (response PatchSkillsId403JSONResponse) VisitPatchSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PatchSkillsId404JSONResponse Error
 
 func (response PatchSkillsId404JSONResponse) VisitPatchSkillsIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchSkillsId500JSONResponse Error
+
+func (response PatchSkillsId500JSONResponse) VisitPatchSkillsIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }

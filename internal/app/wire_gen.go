@@ -8,14 +8,17 @@ package app
 
 import (
 	"github.com/kitoyanok66/workk/config"
+	"github.com/kitoyanok66/workk/internal/auth"
 	"github.com/kitoyanok66/workk/internal/db"
 	"github.com/kitoyanok66/workk/internal/freelancers"
 	"github.com/kitoyanok66/workk/internal/likes"
 	"github.com/kitoyanok66/workk/internal/matches"
+	"github.com/kitoyanok66/workk/internal/middleware"
 	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/skills"
 	"github.com/kitoyanok66/workk/internal/users"
 	"gorm.io/gorm"
+	"time"
 )
 
 // Injectors from wire.go:
@@ -37,7 +40,12 @@ func InitApp(cfg *config.Config) (*App, error) {
 	matchRepository := matches.NewMatchRepository(gormDB)
 	matchService := matches.NewMatchService(matchRepository)
 	likeService := likes.NewLikeService(likeRepository, userService, freelancerService, projectService, matchService)
-	app := NewApp(gormDB, userService, skillService, projectService, freelancerService, likeService, matchService)
+	authRepository := auth.NewAuthRepository(gormDB)
+	authService := auth.NewAuthService(authRepository, userService)
+	string2 := provideJWTSecret(cfg)
+	duration := provideJWTTTL(cfg)
+	jwtManager := middleware.NewJWTManager(string2, duration)
+	app := NewApp(gormDB, userService, skillService, projectService, freelancerService, likeService, matchService, authService, jwtManager)
 	return app, nil
 }
 
@@ -45,12 +53,22 @@ func InitApp(cfg *config.Config) (*App, error) {
 
 type App struct {
 	DB                *gorm.DB
+	JWTManager        *middleware.JWTManager
 	UserService       users.UserService
 	SkillService      skills.SkillService
 	ProjectService    projects.ProjectService
 	FreelancerService freelancers.FreelancerService
 	LikeService       likes.LikeService
 	MatchService      matches.MatchService
+	AuthService       auth.AuthService
+}
+
+func provideJWTSecret(cfg *config.Config) string {
+	return cfg.JWTSecret
+}
+
+func provideJWTTTL(cfg *config.Config) time.Duration {
+	return cfg.JWTTTLHours
 }
 
 func NewApp(db2 *gorm.DB,
@@ -60,6 +78,8 @@ func NewApp(db2 *gorm.DB,
 	freelancerSvc freelancers.FreelancerService,
 	likeSvc likes.LikeService,
 	matchSvc matches.MatchService,
+	authSvc auth.AuthService,
+	jwtManager *middleware.JWTManager,
 ) *App {
 	fAdapter := freelancers.NewFreelancerFetcherAdapter(freelancerSvc)
 	pAdapter := projects.NewProjectFetcherAdapter(projectSvc)
@@ -75,5 +95,7 @@ func NewApp(db2 *gorm.DB,
 		FreelancerService: freelancerSvc,
 		LikeService:       likeSvc,
 		MatchService:      matchSvc,
+		AuthService:       authSvc,
+		JWTManager:        jwtManager,
 	}
 }

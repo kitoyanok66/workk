@@ -176,6 +176,15 @@ func (response GetUsers200JSONResponse) VisitGetUsersResponse(w http.ResponseWri
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetUsers401JSONResponse Error
+
+func (response GetUsers401JSONResponse) VisitGetUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type GetUsers500JSONResponse Error
 
 func (response GetUsers500JSONResponse) VisitGetUsersResponse(w http.ResponseWriter) error {
@@ -207,6 +216,15 @@ type PostUsers400JSONResponse Error
 func (response PostUsers400JSONResponse) VisitPostUsersResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostUsers401JSONResponse Error
+
+func (response PostUsers401JSONResponse) VisitPostUsersResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -245,11 +263,38 @@ func (response DeleteUsersId400JSONResponse) VisitDeleteUsersIdResponse(w http.R
 	return json.NewEncoder(w).Encode(response)
 }
 
+type DeleteUsersId401JSONResponse Error
+
+func (response DeleteUsersId401JSONResponse) VisitDeleteUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteUsersId403JSONResponse Error
+
+func (response DeleteUsersId403JSONResponse) VisitDeleteUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type DeleteUsersId404JSONResponse Error
 
 func (response DeleteUsersId404JSONResponse) VisitDeleteUsersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type DeleteUsersId500JSONResponse Error
+
+func (response DeleteUsersId500JSONResponse) VisitDeleteUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -276,6 +321,15 @@ type GetUsersId400JSONResponse Error
 func (response GetUsersId400JSONResponse) VisitGetUsersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetUsersId401JSONResponse Error
+
+func (response GetUsersId401JSONResponse) VisitGetUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -325,11 +379,38 @@ func (response PatchUsersId400JSONResponse) VisitPatchUsersIdResponse(w http.Res
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PatchUsersId401JSONResponse Error
+
+func (response PatchUsersId401JSONResponse) VisitPatchUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchUsersId403JSONResponse Error
+
+func (response PatchUsersId403JSONResponse) VisitPatchUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PatchUsersId404JSONResponse Error
 
 func (response PatchUsersId404JSONResponse) VisitPatchUsersIdResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PatchUsersId500JSONResponse Error
+
+func (response PatchUsersId500JSONResponse) VisitPatchUsersIdResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }

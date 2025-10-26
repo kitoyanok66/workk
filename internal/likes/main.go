@@ -17,6 +17,7 @@ type LikeService interface {
 	GetFeed(ctx context.Context, userID uuid.UUID) (interface{}, error)
 	Like(ctx context.Context, fromUserID, toUserID uuid.UUID) (*domain.Like, error)
 	Dislike(ctx context.Context, fromUserID, toUserID uuid.UUID) error
+	ResolvePair(ctx context.Context, fromUser, toUser *domain.User) (freelancerID, projectID uuid.UUID, err error)
 }
 
 type likeService struct {
@@ -143,4 +144,33 @@ func (s *likeService) Like(ctx context.Context, fromUserID, toUserID uuid.UUID) 
 
 func (s *likeService) Dislike(ctx context.Context, fromUserID, toUserID uuid.UUID) error {
 	return nil
+}
+
+func (s *likeService) ResolvePair(ctx context.Context, fromUser, toUser *domain.User) (freelancerID, projectID uuid.UUID, err error) {
+	switch {
+	case fromUser.Role == "freelancer" && toUser.Role == "project":
+		freelancer, err := s.freelancerSvc.GetByUserID(ctx, fromUser.ID)
+		if err != nil {
+			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get freelancer by fromUserID: %w", err)
+		}
+		project, err := s.projectSvc.GetByUserID(ctx, toUser.ID)
+		if err != nil {
+			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get project by toUserID: %w", err)
+		}
+		return freelancer.ID, project.ID, nil
+
+	case fromUser.Role == "project" && toUser.Role == "freelancer":
+		freelancer, err := s.freelancerSvc.GetByUserID(ctx, toUser.ID)
+		if err != nil {
+			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get freelancer by toUserID: %w", err)
+		}
+		project, err := s.projectSvc.GetByUserID(ctx, fromUser.ID)
+		if err != nil {
+			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get project by fromUserID: %w", err)
+		}
+		return freelancer.ID, project.ID, nil
+
+	default:
+		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid role combination: %s -> %s", fromUser.Role, toUser.Role)
+	}
 }

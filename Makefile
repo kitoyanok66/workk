@@ -25,7 +25,7 @@ migrate-down:
 	$(MIGRATE) down
 
 # Папки для генерации API
-TAGS=ofreelancers olikes omatches oprojects oreviews oskills ousers
+TAGS=ofreelancers olikes omatches oprojects oreviews oskills ousers oauth
 
 # Генерация API
 gen:
@@ -43,6 +43,7 @@ gen:
 	oapi-codegen -config openapi/.openapi -include-tags reviews -package oreviews openapi/openapi.yaml > ./internal/web/oreviews/api.gen.go
 	oapi-codegen -config openapi/.openapi -include-tags skills -package oskills openapi/openapi.yaml > ./internal/web/oskills/api.gen.go
 	oapi-codegen -config openapi/.openapi -include-tags users -package ousers openapi/openapi.yaml > ./internal/web/ousers/api.gen.go
+	oapi-codegen -config openapi/.openapi -include-tags auth -package oauth openapi/openapi.yaml > ./internal/web/oauth/api.gen.go
 
 # Запуск wire
 wire:

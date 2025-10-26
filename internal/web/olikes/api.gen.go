@@ -145,6 +145,15 @@ func (response PostLikesDislike400JSONResponse) VisitPostLikesDislikeResponse(w 
 	return json.NewEncoder(w).Encode(response)
 }
 
+type PostLikesDislike401JSONResponse Error
+
+func (response PostLikesDislike401JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type PostLikesDislike404JSONResponse Error
 
 func (response PostLikesDislike404JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
@@ -185,6 +194,15 @@ type PostLikesLike400JSONResponse Error
 func (response PostLikesLike400JSONResponse) VisitPostLikesLikeResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type PostLikesLike401JSONResponse Error
+
+func (response PostLikesLike401JSONResponse) VisitPostLikesLikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }

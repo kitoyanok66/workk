@@ -12,7 +12,6 @@ import (
 type UserRepository interface {
 	GetAll(ctx context.Context) ([]*domain.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
-	GetByTelegramID(ctx context.Context, tgID int64) (*domain.User, error)
 	Create(ctx context.Context, user *domain.User) error
 	Update(ctx context.Context, user *domain.User) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -41,17 +40,6 @@ func (r *userRepository) GetAll(ctx context.Context) ([]*domain.User, error) {
 func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var ormUser UserORM
 	if err := r.db.WithContext(ctx).First(&ormUser, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return ormUser.ToDomain(), nil
-}
-
-func (r *userRepository) GetByTelegramID(ctx context.Context, tgID int64) (*domain.User, error) {
-	var ormUser UserORM
-	if err := r.db.WithContext(ctx).First(&ormUser, "telegram_user_id = ?", tgID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

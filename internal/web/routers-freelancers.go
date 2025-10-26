@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/dto"
 	"github.com/kitoyanok66/workk/internal/freelancers"
+	"github.com/kitoyanok66/workk/internal/middleware"
 	"github.com/kitoyanok66/workk/internal/web/ofreelancers"
 )
 
@@ -53,9 +54,14 @@ func (h *freelancerHandler) GetFreelancersId(ctx context.Context, request ofreel
 
 // POST /freelancers
 func (h *freelancerHandler) PostFreelancers(ctx context.Context, request ofreelancers.PostFreelancersRequestObject) (ofreelancers.PostFreelancersResponseObject, error) {
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return ofreelancers.PostFreelancers401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	body := request.Body
 
-	createdFreelancer, err := h.svc.Create(ctx, body.UserID, body.Title, body.Description, body.HourlyRate, body.PortfolioURL, body.ExperienceYears, body.SkillIDs)
+	createdFreelancer, err := h.svc.Create(ctx, userID, body.Title, body.Description, body.HourlyRate, body.PortfolioURL, body.ExperienceYears, body.SkillIDs)
 	if err != nil {
 		return ofreelancers.PostFreelancers400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}
@@ -65,9 +71,25 @@ func (h *freelancerHandler) PostFreelancers(ctx context.Context, request ofreela
 
 // PATCH /freelancers/{id}
 func (h *freelancerHandler) PatchFreelancersId(ctx context.Context, request ofreelancers.PatchFreelancersIdRequestObject) (ofreelancers.PatchFreelancersIdResponseObject, error) {
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return ofreelancers.PatchFreelancersId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	id, err := uuid.Parse(request.Id.String())
 	if err != nil {
 		return ofreelancers.PatchFreelancersId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	}
+
+	freelancer, err := h.svc.GetByID(ctx, id)
+	if err != nil {
+		return ofreelancers.PatchFreelancersId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+	if freelancer == nil {
+		return ofreelancers.PatchFreelancersId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, "freelancer not found")), nil
+	}
+	if freelancer.UserID != userID {
+		return ofreelancers.PatchFreelancersId403JSONResponse(*dto.NewErrorDTO(http.StatusForbidden, "access denied")), nil
 	}
 
 	body := request.Body
@@ -82,8 +104,30 @@ func (h *freelancerHandler) PatchFreelancersId(ctx context.Context, request ofre
 
 // DELETE /freelancers/{id}
 func (h *freelancerHandler) DeleteFreelancersId(ctx context.Context, request ofreelancers.DeleteFreelancersIdRequestObject) (ofreelancers.DeleteFreelancersIdResponseObject, error) {
-	if err := h.svc.Delete(ctx, request.Id); err != nil {
-		return ofreelancers.DeleteFreelancersId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, err.Error())), nil
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return ofreelancers.DeleteFreelancersId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
 	}
+
+	id, err := uuid.Parse(request.Id.String())
+	if err != nil {
+		return ofreelancers.DeleteFreelancersId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	}
+
+	freelancer, err := h.svc.GetByID(ctx, id)
+	if err != nil {
+		return ofreelancers.DeleteFreelancersId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+	if freelancer == nil {
+		return ofreelancers.DeleteFreelancersId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, "freelancer not found")), nil
+	}
+	if freelancer.UserID != userID {
+		return ofreelancers.DeleteFreelancersId403JSONResponse(*dto.NewErrorDTO(http.StatusForbidden, "access denied")), nil
+	}
+
+	if err := h.svc.Delete(ctx, id); err != nil {
+		return ofreelancers.DeleteFreelancersId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+
 	return ofreelancers.DeleteFreelancersId204Response{}, nil
 }

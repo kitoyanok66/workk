@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/dto"
+	"github.com/kitoyanok66/workk/internal/middleware"
 	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/web/oprojects"
 )
@@ -53,9 +54,14 @@ func (h *projectHandler) GetProjectsId(ctx context.Context, request oprojects.Ge
 
 // POST /projects
 func (h *projectHandler) PostProjects(ctx context.Context, request oprojects.PostProjectsRequestObject) (oprojects.PostProjectsResponseObject, error) {
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return oprojects.PostProjects401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	body := request.Body
 
-	createdProject, err := h.svc.Create(ctx, body.UserID, body.Title, body.Description, body.Budget, body.Deadline, body.SkillIDs)
+	createdProject, err := h.svc.Create(ctx, userID, body.Title, body.Description, body.Budget, body.Deadline, body.SkillIDs)
 	if err != nil {
 		return oprojects.PostProjects400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}
@@ -65,9 +71,25 @@ func (h *projectHandler) PostProjects(ctx context.Context, request oprojects.Pos
 
 // PATCH /projects/{id}
 func (h *projectHandler) PatchProjectsId(ctx context.Context, request oprojects.PatchProjectsIdRequestObject) (oprojects.PatchProjectsIdResponseObject, error) {
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return oprojects.PatchProjectsId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	id, err := uuid.Parse(request.Id.String())
 	if err != nil {
 		return oprojects.PatchProjectsId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	}
+
+	project, err := h.svc.GetByID(ctx, id)
+	if err != nil {
+		return oprojects.PatchProjectsId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+	if project == nil {
+		return oprojects.PatchProjectsId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, "freelancer not found")), nil
+	}
+	if project.UserID != userID {
+		return oprojects.PatchProjectsId403JSONResponse(*dto.NewErrorDTO(http.StatusForbidden, "access denied")), nil
 	}
 
 	body := request.Body
@@ -78,12 +100,35 @@ func (h *projectHandler) PatchProjectsId(ctx context.Context, request oprojects.
 	}
 
 	return oprojects.PatchProjectsId200JSONResponse(*dto.NewProjectDTO(updatedProject)), nil
+
 }
 
 // DELETE /projects/{id}
 func (h *projectHandler) DeleteProjectsId(ctx context.Context, request oprojects.DeleteProjectsIdRequestObject) (oprojects.DeleteProjectsIdResponseObject, error) {
-	if err := h.svc.Delete(ctx, request.Id); err != nil {
-		return oprojects.DeleteProjectsId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, err.Error())), nil
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return oprojects.DeleteProjectsId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
 	}
+
+	id, err := uuid.Parse(request.Id.String())
+	if err != nil {
+		return oprojects.DeleteProjectsId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	}
+
+	project, err := h.svc.GetByID(ctx, id)
+	if err != nil {
+		return oprojects.DeleteProjectsId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+	if project == nil {
+		return oprojects.DeleteProjectsId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, "freelancer not found")), nil
+	}
+	if project.UserID != userID {
+		return oprojects.DeleteProjectsId403JSONResponse(*dto.NewErrorDTO(http.StatusForbidden, "access denied")), nil
+	}
+
+	if err := h.svc.Delete(ctx, id); err != nil {
+		return oprojects.DeleteProjectsId500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+
 	return oprojects.DeleteProjectsId204Response{}, nil
 }

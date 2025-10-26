@@ -9,38 +9,27 @@ import (
 )
 
 type User struct {
-	ID               uuid.UUID
-	TelegramUserID   int64
-	TelegramUsername string
-	Fullname         string
-	Role             string
-	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	ID        uuid.UUID
+	Fullname  string
+	Role      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func NewUser(telegramUserID int64, telegramUsername, fullname string) (*User, error) {
-	if telegramUserID == 0 {
-		return nil, errors.New("telegram user id cannot be empty")
-	}
+func NewUser(fullname string) (*User, error) {
 	if strings.TrimSpace(fullname) == "" {
 		return nil, errors.New("full name cannot be empty")
 	}
 
 	id := uuid.New()
 
-	if strings.TrimSpace(telegramUsername) == "" {
-		telegramUsername = "user_" + id.String()[:8]
-	}
-
 	now := time.Now()
 	return &User{
-		ID:               id,
-		TelegramUserID:   telegramUserID,
-		TelegramUsername: telegramUsername,
-		Fullname:         fullname,
-		Role:             "undefind",
-		CreatedAt:        now,
-		UpdatedAt:        now,
+		ID:        id,
+		Fullname:  fullname,
+		Role:      "undefined",
+		CreatedAt: now,
+		UpdatedAt: now,
 	}, nil
 }
 
@@ -54,15 +43,10 @@ func (u *User) UpdateFullName(newName string) error {
 	return nil
 }
 
-func (u *User) UpdateTelegramUsername(username string) {
-	u.TelegramUsername = strings.TrimSpace(username)
-	u.UpdatedAt = time.Now()
-}
-
 func (u *User) UpdateRole(role string) error {
 	role = strings.TrimSpace(role)
-	if role != "freelancer" && role != "project" && role != "undefind" {
-		return errors.New("role must be 'freelancer', 'project' or 'undefind'")
+	if role != "freelancer" && role != "project" && role != "undefined" {
+		return errors.New("role must be 'freelancer', 'project' or 'undefined'")
 	}
 	u.Role = role
 	u.UpdatedAt = time.Now()

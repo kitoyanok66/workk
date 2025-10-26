@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/dto"
+	"github.com/kitoyanok66/workk/internal/middleware"
 	"github.com/kitoyanok66/workk/internal/skills"
 	"github.com/kitoyanok66/workk/internal/web/oskills"
 )
@@ -53,6 +54,11 @@ func (h *skillHandler) GetSkillsId(ctx context.Context, request oskills.GetSkill
 
 // POST /skills
 func (h *skillHandler) PostSkills(ctx context.Context, request oskills.PostSkillsRequestObject) (oskills.PostSkillsResponseObject, error) {
+	_, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return oskills.PostSkills401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	body := request.Body
 
 	createdSkill, err := h.svc.Create(ctx, body.Name, body.Category, body.Description)
@@ -65,6 +71,11 @@ func (h *skillHandler) PostSkills(ctx context.Context, request oskills.PostSkill
 
 // PATCH /skills/{id}
 func (h *skillHandler) PatchSkillsId(ctx context.Context, request oskills.PatchSkillsIdRequestObject) (oskills.PatchSkillsIdResponseObject, error) {
+	_, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return oskills.PatchSkillsId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	id, err := uuid.Parse(request.Id.String())
 	if err != nil {
 		return oskills.PatchSkillsId400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
@@ -82,8 +93,14 @@ func (h *skillHandler) PatchSkillsId(ctx context.Context, request oskills.PatchS
 
 // DELETE /skills/{id}
 func (h *skillHandler) DeleteSkillsId(ctx context.Context, request oskills.DeleteSkillsIdRequestObject) (oskills.DeleteSkillsIdResponseObject, error) {
+	_, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return oskills.DeleteSkillsId401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
 	if err := h.svc.Delete(ctx, request.Id); err != nil {
 		return oskills.DeleteSkillsId404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, err.Error())), nil
 	}
+
 	return oskills.DeleteSkillsId204Response{}, nil
 }
