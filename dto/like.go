@@ -14,19 +14,14 @@ type LikeDTO struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-type LikeDislikeRequest struct {
+type LikeRequest struct {
 	FromUserID uuid.UUID `json:"from_user_id"`
 	ToUserID   uuid.UUID `json:"to_user_id"`
 }
 
 type LikeResponse struct {
-	Like  *LikeDTO    `json:"like"`
-	Match *MatchDTO   `json:"match,omitempty"`
-	Next  interface{} `json:"next"`
-}
-
-type DislikeResponse struct {
-	Next interface{} `json:"next"`
+	Like  *LikeDTO  `json:"like"`
+	Match *MatchDTO `json:"match,omitempty"`
 }
 
 type NextFeedResponse struct {

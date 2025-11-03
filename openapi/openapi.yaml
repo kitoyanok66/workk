@@ -131,7 +131,7 @@ paths:
   /likes/feed:
     get:
       summary: Get next feed card for current user
-      description: Get next feed card for current user without 'ToUserID'.
+      description: Get next feed card for current user without target user id.
       tags:
         - likes
       responses:
@@ -176,7 +176,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LikeDislikeRequest'
+              $ref: '#/components/schemas/LikeRequest'
       responses:
         200:
           description: Like successfully created, get next card.
@@ -184,49 +184,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LikeResponse'
-        400:
-          description: Bad request.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        401:
-          description: Unauthorized.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        404:
-          description: User not found.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        500:
-          description: Internal Server Error.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /likes/dislike:
-    post:
-      summary: Dislike a freelancer or project
-      description: Marks a user or project as disliked. Returns the next suggestion.
-      tags:
-        - likes
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LikeDislikeRequest'
-      responses:
-        200:
-          description: Dislike recorded successfully, get next card.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DislikeResponse'
         400:
           description: Bad request.
           content:
@@ -1181,13 +1138,13 @@ components:
         created_at:
           type: string
           format: date-time
-    LikeDislikeRequest:
-      x-go-type: dto.LikeDislikeRequest
+    LikeRequest:
+      x-go-type: dto.LikeRequest
       x-go-type-import:
         name: dto
         path: github.com/kitoyanok66/workk/dto
       type: object
-      description: Request body for creating a like or dislike.
+      description: Request body for creating a like.
       properties:
         from_user_id:
           type: string
@@ -1201,27 +1158,13 @@ components:
         name: dto
         path: github.com/kitoyanok66/workk/dto
       type: object
-      description: Response body for creating a like and next card.
+      description: Response body for creating a like and get Match.
       properties:
         like:
           $ref: '#/components/schemas/LikeDTO'
         match:
           $ref: '#/components/schemas/MatchDTO'
           nullable: true
-        next:
-          type: object
-          description: Next card (freelancer or project)
-    DislikeResponse:
-      x-go-type: dto.DislikeResponse
-      x-go-type-import:
-        name: dto
-        path: github.com/kitoyanok66/workk/dto
-      type: object
-      description: Response body for creating a dislike and next card.
-      properties:
-        next:
-          type: object
-          description: Next card (freelancer or project)
     NextFeedResponse:
       x-go-type: dto.NextFeedResponse
       x-go-type-import:

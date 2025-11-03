@@ -64,11 +64,6 @@ func (h *likeHandler) PostLikesLike(ctx context.Context, request olikes.PostLike
 		return olikes.PostLikesLike400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, err.Error())), nil
 	}
 
-	nextCard, err := h.svc.GetFeed(ctx, userID)
-	if err != nil {
-		return olikes.PostLikesLike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, "failed to get next card: "+err.Error())), nil
-	}
-
 	fromUser, err := h.userSvc.GetByID(ctx, userID)
 	if err != nil || fromUser == nil {
 		return olikes.PostLikesLike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, "failed to get fromUser")), nil
@@ -82,7 +77,6 @@ func (h *likeHandler) PostLikesLike(ctx context.Context, request olikes.PostLike
 	if err != nil {
 		return olikes.PostLikesLike200JSONResponse(dto.LikeResponse{
 			Like: dto.NewLikeDTO(like),
-			Next: nextCard,
 		}), nil
 	}
 
@@ -117,32 +111,7 @@ func (h *likeHandler) PostLikesLike(ctx context.Context, request olikes.PostLike
 	resp := dto.LikeResponse{
 		Like:  dto.NewLikeDTO(like),
 		Match: matchDTO,
-		Next:  nextCard,
 	}
 
 	return olikes.PostLikesLike200JSONResponse(resp), nil
-}
-
-// POST /likes/dislike
-func (h *likeHandler) PostLikesDislike(ctx context.Context, request olikes.PostLikesDislikeRequestObject) (olikes.PostLikesDislikeResponseObject, error) {
-	userID, ok := middleware.UserIDFromContext(ctx)
-	if !ok {
-		return olikes.PostLikesDislike401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
-	}
-
-	body := request.Body
-	toUserID := body.ToUserID
-
-	if err := h.svc.Dislike(ctx, userID, toUserID); err != nil {
-		return olikes.PostLikesDislike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
-	}
-
-	nextCard, err := h.svc.GetFeed(ctx, userID)
-	if err != nil {
-		return olikes.PostLikesDislike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
-	}
-
-	resp := dto.DislikeResponse{Next: nextCard}
-
-	return olikes.PostLikesDislike200JSONResponse(resp), nil
 }
