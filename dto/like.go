@@ -19,10 +19,6 @@ type LikeDislikeRequest struct {
 	ToUserID   uuid.UUID `json:"to_user_id"`
 }
 
-type NextFeedRequest struct {
-	FromUserID uuid.UUID `json:"from_user_id"`
-}
-
 type LikeResponse struct {
 	Like  *LikeDTO    `json:"like"`
 	Match *MatchDTO   `json:"match,omitempty"`

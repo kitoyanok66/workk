@@ -33,7 +33,7 @@ func NewLikeHandler(svc likes.LikeService, matchSvc matches.MatchService, freela
 }
 
 // GET /likes/feed
-func (h *likeHandler) GetLikesFeed(ctx context.Context, request olikes.GetLikesFeedRequestObject) (olikes.GetLikesFeedResponseObject, error) {
+func (h *likeHandler) GetLikesFeed(ctx context.Context, _ olikes.GetLikesFeedRequestObject) (olikes.GetLikesFeedResponseObject, error) {
 	userID, ok := middleware.UserIDFromContext(ctx)
 	if !ok {
 		return olikes.GetLikesFeed401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil

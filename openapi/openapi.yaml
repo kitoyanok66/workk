@@ -134,12 +134,6 @@ paths:
       description: Get next feed card for current user without 'ToUserID'.
       tags:
         - likes
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NextFeedRequest'
       responses:
         200:
           description: Get next card successfully.
@@ -1199,17 +1193,6 @@ components:
           type: string
           format: uuid
         to_user_id:
-          type: string
-          format: uuid
-    NextFeedRequest:
-      x-go-type: dto.NextFeedRequest
-      x-go-type-import:
-        name: dto
-        path: github.com/kitoyanok66/workk/dto
-      type: object
-      description: Request body for get next card.
-      properties:
-        from_user_id:
           type: string
           format: uuid
     LikeResponse:

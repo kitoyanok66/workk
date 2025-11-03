@@ -38,9 +38,6 @@ type LikeResponse = dto.LikeResponse
 // MatchDTO Data Transfer Object representing a match between freelancer and project
 type MatchDTO = dto.MatchDTO
 
-// NextFeedRequest Request body for get next card.
-type NextFeedRequest = dto.NextFeedRequest
-
 // NextFeedResponse Response body for get next card.
 type NextFeedResponse = dto.NextFeedResponse
 
@@ -55,9 +52,6 @@ type UserDTO = dto.UserDTO
 
 // PostLikesDislikeJSONRequestBody defines body for PostLikesDislike for application/json ContentType.
 type PostLikesDislikeJSONRequestBody = LikeDislikeRequest
-
-// GetLikesFeedJSONRequestBody defines body for GetLikesFeed for application/json ContentType.
-type GetLikesFeedJSONRequestBody = NextFeedRequest
 
 // PostLikesLikeJSONRequestBody defines body for PostLikesLike for application/json ContentType.
 type PostLikesLikeJSONRequestBody = LikeDislikeRequest
@@ -195,7 +189,6 @@ func (response PostLikesDislike500JSONResponse) VisitPostLikesDislikeResponse(w 
 }
 
 type GetLikesFeedRequestObject struct {
-	Body *GetLikesFeedJSONRequestBody
 }
 
 type GetLikesFeedResponseObject interface {
@@ -357,12 +350,6 @@ func (sh *strictHandler) PostLikesDislike(ctx echo.Context) error {
 // GetLikesFeed operation middleware
 func (sh *strictHandler) GetLikesFeed(ctx echo.Context) error {
 	var request GetLikesFeedRequestObject
-
-	var body GetLikesFeedJSONRequestBody
-	if err := ctx.Bind(&body); err != nil {
-		return err
-	}
-	request.Body = &body
 
 	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
 		return sh.ssi.GetLikesFeed(ctx.Request().Context(), request.(GetLikesFeedRequestObject))
