@@ -32,6 +32,23 @@ func NewLikeHandler(svc likes.LikeService, matchSvc matches.MatchService, freela
 	}
 }
 
+// GET /likes/feed
+func (h *likeHandler) GetLikesFeed(ctx context.Context, request olikes.GetLikesFeedRequestObject) (olikes.GetLikesFeedResponseObject, error) {
+	userID, ok := middleware.UserIDFromContext(ctx)
+	if !ok {
+		return olikes.GetLikesFeed401JSONResponse(*dto.NewErrorDTO(http.StatusUnauthorized, "unauthorized")), nil
+	}
+
+	nextCard, err := h.svc.GetFeed(ctx, userID)
+	if err != nil {
+		return olikes.GetLikesFeed500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, "failed to get next card: "+err.Error())), nil
+	}
+
+	resp := dto.NextFeedResponse{Next: nextCard}
+
+	return olikes.GetLikesFeed200JSONResponse(resp), nil
+}
+
 // POST /likes/like
 func (h *likeHandler) PostLikesLike(ctx context.Context, request olikes.PostLikesLikeRequestObject) (olikes.PostLikesLikeResponseObject, error) {
 	userID, ok := middleware.UserIDFromContext(ctx)
@@ -120,12 +137,12 @@ func (h *likeHandler) PostLikesDislike(ctx context.Context, request olikes.PostL
 		return olikes.PostLikesDislike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
 	}
 
-	next, err := h.svc.GetFeed(ctx, userID)
+	nextCard, err := h.svc.GetFeed(ctx, userID)
 	if err != nil {
 		return olikes.PostLikesDislike500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
 	}
 
-	resp := dto.DislikeResponse{Next: next}
+	resp := dto.DislikeResponse{Next: nextCard}
 
 	return olikes.PostLikesDislike200JSONResponse(resp), nil
 }

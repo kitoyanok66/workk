@@ -29,14 +29,20 @@ type FreelancerDTO = dto.FreelancerDTO
 // LikeDTO Data Transfer Object representing a like.
 type LikeDTO = dto.LikeDTO
 
-// LikeRequest Request body for creating a like or dislike.
-type LikeRequest = dto.LikeRequest
+// LikeDislikeRequest Request body for creating a like or dislike.
+type LikeDislikeRequest = dto.LikeDislikeRequest
 
 // LikeResponse Response body for creating a like and next card.
 type LikeResponse = dto.LikeResponse
 
 // MatchDTO Data Transfer Object representing a match between freelancer and project
 type MatchDTO = dto.MatchDTO
+
+// NextFeedRequest Request body for get next card.
+type NextFeedRequest = dto.NextFeedRequest
+
+// NextFeedResponse Response body for get next card.
+type NextFeedResponse = dto.NextFeedResponse
 
 // ProjectDTO Data Transfer Object representing a project.
 type ProjectDTO = dto.ProjectDTO
@@ -48,16 +54,22 @@ type SkillDTO = dto.SkillDTO
 type UserDTO = dto.UserDTO
 
 // PostLikesDislikeJSONRequestBody defines body for PostLikesDislike for application/json ContentType.
-type PostLikesDislikeJSONRequestBody = LikeRequest
+type PostLikesDislikeJSONRequestBody = LikeDislikeRequest
+
+// GetLikesFeedJSONRequestBody defines body for GetLikesFeed for application/json ContentType.
+type GetLikesFeedJSONRequestBody = NextFeedRequest
 
 // PostLikesLikeJSONRequestBody defines body for PostLikesLike for application/json ContentType.
-type PostLikesLikeJSONRequestBody = LikeRequest
+type PostLikesLikeJSONRequestBody = LikeDislikeRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Dislike a freelancer or project
 	// (POST /likes/dislike)
 	PostLikesDislike(ctx echo.Context) error
+	// Get next feed card for current user
+	// (GET /likes/feed)
+	GetLikesFeed(ctx echo.Context) error
 	// Like a freelancer or project
 	// (POST /likes/like)
 	PostLikesLike(ctx echo.Context) error
@@ -74,6 +86,15 @@ func (w *ServerInterfaceWrapper) PostLikesDislike(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostLikesDislike(ctx)
+	return err
+}
+
+// GetLikesFeed converts echo context to params.
+func (w *ServerInterfaceWrapper) GetLikesFeed(ctx echo.Context) error {
+	var err error
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetLikesFeed(ctx)
 	return err
 }
 
@@ -115,6 +136,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 	}
 
 	router.POST(baseURL+"/likes/dislike", wrapper.PostLikesDislike)
+	router.GET(baseURL+"/likes/feed", wrapper.GetLikesFeed)
 	router.POST(baseURL+"/likes/like", wrapper.PostLikesLike)
 
 }
@@ -166,6 +188,59 @@ func (response PostLikesDislike404JSONResponse) VisitPostLikesDislikeResponse(w 
 type PostLikesDislike500JSONResponse Error
 
 func (response PostLikesDislike500JSONResponse) VisitPostLikesDislikeResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLikesFeedRequestObject struct {
+	Body *GetLikesFeedJSONRequestBody
+}
+
+type GetLikesFeedResponseObject interface {
+	VisitGetLikesFeedResponse(w http.ResponseWriter) error
+}
+
+type GetLikesFeed200JSONResponse NextFeedResponse
+
+func (response GetLikesFeed200JSONResponse) VisitGetLikesFeedResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLikesFeed400JSONResponse Error
+
+func (response GetLikesFeed400JSONResponse) VisitGetLikesFeedResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLikesFeed401JSONResponse Error
+
+func (response GetLikesFeed401JSONResponse) VisitGetLikesFeedResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLikesFeed404JSONResponse Error
+
+func (response GetLikesFeed404JSONResponse) VisitGetLikesFeedResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetLikesFeed500JSONResponse Error
+
+func (response GetLikesFeed500JSONResponse) VisitGetLikesFeedResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -230,6 +305,9 @@ type StrictServerInterface interface {
 	// Dislike a freelancer or project
 	// (POST /likes/dislike)
 	PostLikesDislike(ctx context.Context, request PostLikesDislikeRequestObject) (PostLikesDislikeResponseObject, error)
+	// Get next feed card for current user
+	// (GET /likes/feed)
+	GetLikesFeed(ctx context.Context, request GetLikesFeedRequestObject) (GetLikesFeedResponseObject, error)
 	// Like a freelancer or project
 	// (POST /likes/like)
 	PostLikesLike(ctx context.Context, request PostLikesLikeRequestObject) (PostLikesLikeResponseObject, error)
@@ -270,6 +348,35 @@ func (sh *strictHandler) PostLikesDislike(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(PostLikesDislikeResponseObject); ok {
 		return validResponse.VisitPostLikesDislikeResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetLikesFeed operation middleware
+func (sh *strictHandler) GetLikesFeed(ctx echo.Context) error {
+	var request GetLikesFeedRequestObject
+
+	var body GetLikesFeedJSONRequestBody
+	if err := ctx.Bind(&body); err != nil {
+		return err
+	}
+	request.Body = &body
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLikesFeed(ctx.Request().Context(), request.(GetLikesFeedRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLikesFeed")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetLikesFeedResponseObject); ok {
+		return validResponse.VisitGetLikesFeedResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

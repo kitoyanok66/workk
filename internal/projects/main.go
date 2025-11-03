@@ -61,7 +61,9 @@ func (s *projectService) Create(ctx context.Context, userID uuid.UUID, title, de
 		return nil, err
 	}
 	if existing != nil {
-		return nil, fmt.Errorf("project for this user already exists")
+		if err := s.repo.Delete(ctx, existing.ID); err != nil {
+			return nil, err
+		}
 	}
 
 	var skillsDomain []domain.Skill

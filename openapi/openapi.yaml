@@ -128,6 +128,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /likes/feed:
+    get:
+      summary: Get next feed card for current user
+      description: Get next feed card for current user without 'ToUserID'.
+      tags:
+        - likes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NextFeedRequest'
+      responses:
+        200:
+          description: Get next card successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NextFeedResponse'
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: User not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        500:
+          description: Internal Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /likes/like:
     post:
       summary: Like a freelancer or project
@@ -139,7 +182,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LikeRequest'
+              $ref: '#/components/schemas/LikeDislikeRequest'
       responses:
         200:
           description: Like successfully created, get next card.
@@ -182,7 +225,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LikeRequest'
+              $ref: '#/components/schemas/LikeDislikeRequest'
       responses:
         200:
           description: Dislike recorded successfully, get next card.
@@ -1144,8 +1187,8 @@ components:
         created_at:
           type: string
           format: date-time
-    LikeRequest:
-      x-go-type: dto.LikeRequest
+    LikeDislikeRequest:
+      x-go-type: dto.LikeDislikeRequest
       x-go-type-import:
         name: dto
         path: github.com/kitoyanok66/workk/dto
@@ -1156,6 +1199,17 @@ components:
           type: string
           format: uuid
         to_user_id:
+          type: string
+          format: uuid
+    NextFeedRequest:
+      x-go-type: dto.NextFeedRequest
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Request body for get next card.
+      properties:
+        from_user_id:
           type: string
           format: uuid
     LikeResponse:
@@ -1181,6 +1235,17 @@ components:
         path: github.com/kitoyanok66/workk/dto
       type: object
       description: Response body for creating a dislike and next card.
+      properties:
+        next:
+          type: object
+          description: Next card (freelancer or project)
+    NextFeedResponse:
+      x-go-type: dto.NextFeedResponse
+      x-go-type-import:
+        name: dto
+        path: github.com/kitoyanok66/workk/dto
+      type: object
+      description: Response body for get next card.
       properties:
         next:
           type: object

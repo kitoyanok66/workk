@@ -14,9 +14,13 @@ type LikeDTO struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
-type LikeRequest struct {
+type LikeDislikeRequest struct {
 	FromUserID uuid.UUID `json:"from_user_id"`
 	ToUserID   uuid.UUID `json:"to_user_id"`
+}
+
+type NextFeedRequest struct {
+	FromUserID uuid.UUID `json:"from_user_id"`
 }
 
 type LikeResponse struct {
@@ -26,6 +30,10 @@ type LikeResponse struct {
 }
 
 type DislikeResponse struct {
+	Next interface{} `json:"next"`
+}
+
+type NextFeedResponse struct {
 	Next interface{} `json:"next"`
 }
 
