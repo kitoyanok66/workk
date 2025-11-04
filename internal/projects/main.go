@@ -19,16 +19,18 @@ type ProjectService interface {
 	Create(ctx context.Context, userID uuid.UUID, title, description string, budget float64, deadline time.Time, skillIDs []uuid.UUID) (*domain.Project, error)
 	Update(ctx context.Context, id uuid.UUID, title, description string, budget float64, deadline time.Time, skillIDs []uuid.UUID) (*domain.Project, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetFeedForFreelancer(ctx context.Context, freelancerID uuid.UUID) ([]*domain.Project, error)
+	GetFeedForFreelancer(ctx context.Context, freelancerID, currentUserID uuid.UUID) (*domain.Project, error)
 
 	SetFreelancerDep(dep deps.FreelancerFetcher)
+	SetLikeDep(likeDep deps.LikeFetcher)
 }
 
 type projectService struct {
 	repo          ProjectRepository
 	skillSvc      skills.SkillService
-	freelancerDep deps.FreelancerFetcher
 	userSvc       users.UserService
+	freelancerDep deps.FreelancerFetcher
+	likeDep       deps.LikeFetcher
 }
 
 func NewProjectService(repo ProjectRepository, skillSvc skills.SkillService, userSvc users.UserService) ProjectService {
@@ -41,6 +43,10 @@ func NewProjectService(repo ProjectRepository, skillSvc skills.SkillService, use
 
 func (s *projectService) SetFreelancerDep(dep deps.FreelancerFetcher) {
 	s.freelancerDep = dep
+}
+
+func (s *projectService) SetLikeDep(likeDep deps.LikeFetcher) {
+	s.likeDep = likeDep
 }
 
 func (s *projectService) GetAll(ctx context.Context) ([]*domain.Project, error) {
@@ -62,6 +68,9 @@ func (s *projectService) Create(ctx context.Context, userID uuid.UUID, title, de
 	}
 	if existing != nil {
 		if err := s.repo.Delete(ctx, existing.ID); err != nil {
+			return nil, err
+		}
+		if err := s.likeDep.DeleteByUserID(ctx, userID); err != nil {
 			return nil, err
 		}
 	}
@@ -140,16 +149,19 @@ func (s *projectService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *projectService) GetFeedForFreelancer(ctx context.Context, freelancerID uuid.UUID) ([]*domain.Project, error) {
-	freelancer, err := s.freelancerDep.GetByID(ctx, freelancerID)
+func (s *projectService) GetFeedForFreelancer(ctx context.Context, freelancerID, currentUserID uuid.UUID) (*domain.Project, error) {
+	project, err := s.freelancerDep.GetByID(ctx, freelancerID)
 	if err != nil {
 		return nil, err
 	}
+	if project == nil {
+		return nil, fmt.Errorf("project not found")
+	}
 
 	var skillIDs []uuid.UUID
-	for _, sk := range freelancer.Skills {
+	for _, sk := range project.Skills {
 		skillIDs = append(skillIDs, sk.ID)
 	}
 
-	return s.repo.GetBySkillIDs(ctx, skillIDs, freelancerID, 1)
+	return s.repo.GetBySkillIDs(ctx, skillIDs, currentUserID)
 }

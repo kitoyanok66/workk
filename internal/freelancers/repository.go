@@ -16,7 +16,7 @@ type FreelancerRepository interface {
 	Create(ctx context.Context, freelancer *domain.Freelancer) error
 	Update(ctx context.Context, freelancer *domain.Freelancer) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, projectID uuid.UUID, limit int) ([]*domain.Freelancer, error)
+	GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, currentUserID uuid.UUID) (*domain.Freelancer, error)
 }
 
 type freelancerRepository struct {
@@ -88,7 +88,7 @@ func (r *freelancerRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&FreelancerORM{}, "id = ?", id).Error
 }
 
-func (r *freelancerRepository) GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, projectID uuid.UUID, limit int) ([]*domain.Freelancer, error) {
+func (r *freelancerRepository) GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, currentUserID uuid.UUID) (*domain.Freelancer, error) {
 	if len(skillIDs) == 0 {
 		return nil, nil
 	}
@@ -105,17 +105,19 @@ func (r *freelancerRepository) GetBySkillIDs(ctx context.Context, skillIDs []uui
         )
         GROUP BY f.id
         ORDER BY COUNT(DISTINCT fs.skill_id) DESC
-        LIMIT ?;
+        LIMIT 1;
     `
 
-	var ormFreelancers []FreelancerORM
-	if err := r.db.WithContext(ctx).Raw(query, skillIDs, projectID, limit).Scan(&ormFreelancers).Error; err != nil {
+	var ormFreelancer FreelancerORM
+	if err := r.db.WithContext(ctx).Raw(query, skillIDs, currentUserID).Scan(&ormFreelancer).Error; err != nil {
 		return nil, err
 	}
 
-	var result []*domain.Freelancer
-	for _, f := range ormFreelancers {
-		result = append(result, f.ToDomain())
+	if ormFreelancer.ID != uuid.Nil {
+		if err := r.db.WithContext(ctx).Preload("Skills").First(&ormFreelancer, "id = ?", ormFreelancer.ID).Error; err != nil {
+			return nil, err
+		}
 	}
-	return result, nil
+
+	return ormFreelancer.ToDomain(), nil
 }

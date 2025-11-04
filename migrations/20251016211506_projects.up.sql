@@ -4,7 +4,7 @@ CREATE TABLE projects (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     budget NUMERIC(10,2),
-    deadline TIMESTAMP,
-    created_at TIMESTAMP DEFAULT now(),
-    updated_at TIMESTAMP DEFAULT now()
+    deadline TIMESTAMP WITHOUT TIME ZONE,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now()
 );

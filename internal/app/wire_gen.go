@@ -39,7 +39,7 @@ func InitApp(cfg *config.Config) (*App, error) {
 	likeRepository := likes.NewLikeRepository(gormDB)
 	matchRepository := matches.NewMatchRepository(gormDB)
 	matchService := matches.NewMatchService(matchRepository)
-	likeService := likes.NewLikeService(likeRepository, userService, freelancerService, projectService, matchService)
+	likeService := likes.NewLikeService(likeRepository, userService, matchService)
 	authRepository := auth.NewAuthRepository(gormDB)
 	authService := auth.NewAuthService(authRepository, userService)
 	string2 := provideJWTSecret(cfg)
@@ -83,9 +83,16 @@ func NewApp(db2 *gorm.DB,
 ) *App {
 	fAdapter := freelancers.NewFreelancerFetcherAdapter(freelancerSvc)
 	pAdapter := projects.NewProjectFetcherAdapter(projectSvc)
+	lAdapter := likes.NewLikeFetcherAdapter(likeSvc)
 
 	freelancerSvc.SetProjectDep(pAdapter)
+	freelancerSvc.SetLikeDep(lAdapter)
+
 	projectSvc.SetFreelancerDep(fAdapter)
+	projectSvc.SetLikeDep(lAdapter)
+
+	likeSvc.SetFreelancerDep(fAdapter)
+	likeSvc.SetProjectDep(pAdapter)
 
 	return &App{
 		DB:                db2,

@@ -26,3 +26,7 @@ func (a *FreelancerFetcherAdapter) GetByUserID(ctx context.Context, userID uuid.
 func (a *FreelancerFetcherAdapter) Delete(ctx context.Context, id uuid.UUID) error {
 	return a.svc.Delete(ctx, id)
 }
+
+func (a *FreelancerFetcherAdapter) GetFeedForProject(ctx context.Context, projectID, currentUserID uuid.UUID) (*domain.Freelancer, error) {
+	return a.svc.GetFeedForProject(ctx, projectID, currentUserID)
+}

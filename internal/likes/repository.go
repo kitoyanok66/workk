@@ -12,6 +12,7 @@ import (
 type LikeRepository interface {
 	Create(ctx context.Context, like *domain.Like) error
 	ExistsReverse(ctx context.Context, userID, targetID uuid.UUID) (bool, error)
+	DeleteByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
 type likeRepository struct {
@@ -40,4 +41,10 @@ func (r *likeRepository) ExistsReverse(ctx context.Context, userID, targetID uui
 		return false, err
 	}
 	return true, nil
+}
+
+func (r *likeRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {
+	return r.db.WithContext(ctx).
+		Where("from_user_id = ? OR to_user_id = ?", userID, userID).
+		Delete(&LikeORM{}).Error
 }

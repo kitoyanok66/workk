@@ -19,16 +19,18 @@ type FreelancerService interface {
 	Create(ctx context.Context, userID uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error)
 	Update(ctx context.Context, id uuid.UUID, title, description string, hourlyRate float64, portfolio string, experience int, skillIDs []uuid.UUID) (*domain.Freelancer, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetFeedForProject(ctx context.Context, projectID uuid.UUID) ([]*domain.Freelancer, error)
+	GetFeedForProject(ctx context.Context, projectID, currentUserID uuid.UUID) (*domain.Freelancer, error)
 
-	SetProjectDep(dep deps.ProjectFetcher)
+	SetProjectDep(projectDep deps.ProjectFetcher)
+	SetLikeDep(likeDep deps.LikeFetcher)
 }
 
 type freelancerService struct {
 	repo       FreelancerRepository
 	skillSvc   skills.SkillService
-	projectDep deps.ProjectFetcher
 	userSvc    users.UserService
+	projectDep deps.ProjectFetcher
+	likeDep    deps.LikeFetcher
 }
 
 func NewFreelancerService(repo FreelancerRepository, skillSvc skills.SkillService, userSvc users.UserService) FreelancerService {
@@ -39,8 +41,12 @@ func NewFreelancerService(repo FreelancerRepository, skillSvc skills.SkillServic
 	}
 }
 
-func (s *freelancerService) SetProjectDep(dep deps.ProjectFetcher) {
-	s.projectDep = dep
+func (s *freelancerService) SetProjectDep(projectDep deps.ProjectFetcher) {
+	s.projectDep = projectDep
+}
+
+func (s *freelancerService) SetLikeDep(likeDep deps.LikeFetcher) {
+	s.likeDep = likeDep
 }
 
 func (s *freelancerService) GetAll(ctx context.Context) ([]*domain.Freelancer, error) {
@@ -62,6 +68,9 @@ func (s *freelancerService) Create(ctx context.Context, userID uuid.UUID, title,
 	}
 	if existing != nil {
 		if err := s.repo.Delete(ctx, existing.ID); err != nil {
+			return nil, err
+		}
+		if err := s.likeDep.DeleteByUserID(ctx, userID); err != nil {
 			return nil, err
 		}
 	}
@@ -140,10 +149,13 @@ func (s *freelancerService) Delete(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *freelancerService) GetFeedForProject(ctx context.Context, projectID uuid.UUID) ([]*domain.Freelancer, error) {
+func (s *freelancerService) GetFeedForProject(ctx context.Context, projectID, currentUserID uuid.UUID) (*domain.Freelancer, error) {
 	project, err := s.projectDep.GetByID(ctx, projectID)
 	if err != nil {
 		return nil, err
+	}
+	if project == nil {
+		return nil, fmt.Errorf("project not found")
 	}
 
 	var skillIDs []uuid.UUID
@@ -151,5 +163,5 @@ func (s *freelancerService) GetFeedForProject(ctx context.Context, projectID uui
 		skillIDs = append(skillIDs, sk.ID)
 	}
 
-	return s.repo.GetBySkillIDs(ctx, skillIDs, projectID, 1)
+	return s.repo.GetBySkillIDs(ctx, skillIDs, currentUserID)
 }

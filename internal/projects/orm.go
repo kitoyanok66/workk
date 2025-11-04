@@ -14,9 +14,9 @@ type ProjectORM struct {
 	Title       string             `gorm:"type:varchar(255);not null"`
 	Description string             `gorm:"type:text"`
 	Budget      float64            `gorm:"type:numeric(10,2)"`
-	Deadline    time.Time          `gorm:"type:timestamp"`
-	CreatedAt   time.Time          `gorm:"default:now()"`
-	UpdatedAt   time.Time          `gorm:"default:now()"`
+	Deadline    time.Time          `gorm:"type:timestamp without time zone"`
+	CreatedAt   time.Time          `gorm:"type:timestamp without time zone;default:now()"`
+	UpdatedAt   time.Time          `gorm:"type:timestamp without time zone;default:now()"`
 	Skills      []*skills.SkillORM `gorm:"many2many:project_skills;joinForeignKey:ProjectID;joinReferences:SkillID;constraint:OnDelete:CASCADE"`
 }
 

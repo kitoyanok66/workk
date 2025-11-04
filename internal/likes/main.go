@@ -7,9 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kitoyanok66/workk/domain"
-	"github.com/kitoyanok66/workk/internal/freelancers"
+	"github.com/kitoyanok66/workk/internal/deps"
 	"github.com/kitoyanok66/workk/internal/matches"
-	"github.com/kitoyanok66/workk/internal/projects"
 	"github.com/kitoyanok66/workk/internal/users"
 )
 
@@ -18,24 +17,34 @@ type LikeService interface {
 	Like(ctx context.Context, fromUserID, toUserID uuid.UUID) (*domain.Like, error)
 	Dislike(ctx context.Context, fromUserID, toUserID uuid.UUID) error
 	ResolvePair(ctx context.Context, fromUser, toUser *domain.User) (freelancerID, projectID uuid.UUID, err error)
+	DeleteByUserID(ctx context.Context, userID uuid.UUID) error
+
+	SetFreelancerDep(freelancerDep deps.FreelancerFetcher)
+	SetProjectDep(projectDep deps.ProjectFetcher)
 }
 
 type likeService struct {
 	repo          LikeRepository
 	userSvc       users.UserService
-	freelancerSvc freelancers.FreelancerService
-	projectSvc    projects.ProjectService
 	matchSvc      matches.MatchService
+	freelancerDep deps.FreelancerFetcher
+	projectDep    deps.ProjectFetcher
 }
 
-func NewLikeService(repo LikeRepository, userSvc users.UserService, freelancerSvc freelancers.FreelancerService, projectSvc projects.ProjectService, matchSvc matches.MatchService) LikeService {
+func NewLikeService(repo LikeRepository, userSvc users.UserService, matchSvc matches.MatchService) LikeService {
 	return &likeService{
-		repo:          repo,
-		userSvc:       userSvc,
-		freelancerSvc: freelancerSvc,
-		projectSvc:    projectSvc,
-		matchSvc:      matchSvc,
+		repo:     repo,
+		userSvc:  userSvc,
+		matchSvc: matchSvc,
 	}
+}
+
+func (s *likeService) SetFreelancerDep(freelancerDep deps.FreelancerFetcher) {
+	s.freelancerDep = freelancerDep
+}
+
+func (s *likeService) SetProjectDep(projectDep deps.ProjectFetcher) {
+	s.projectDep = projectDep
 }
 
 func (s *likeService) GetFeed(ctx context.Context, userID uuid.UUID) (interface{}, error) {
@@ -49,18 +58,18 @@ func (s *likeService) GetFeed(ctx context.Context, userID uuid.UUID) (interface{
 
 	switch user.Role {
 	case "project":
-		project, err := s.projectSvc.GetByUserID(ctx, userID)
+		project, err := s.projectDep.GetByUserID(ctx, userID)
 		if err != nil {
 			return nil, err
 		}
-		return s.freelancerSvc.GetFeedForProject(ctx, project.ID)
+		return s.freelancerDep.GetFeedForProject(ctx, project.ID, userID)
 
 	case "freelancer":
-		freelancer, err := s.freelancerSvc.GetByUserID(ctx, userID)
+		freelancer, err := s.freelancerDep.GetByUserID(ctx, userID)
 		if err != nil {
 			return nil, err
 		}
-		return s.projectSvc.GetFeedForFreelancer(ctx, freelancer.ID)
+		return s.projectDep.GetFeedForFreelancer(ctx, freelancer.ID, userID)
 
 	default:
 		return nil, fmt.Errorf("unsupported user role: %s", user.Role)
@@ -108,11 +117,11 @@ func (s *likeService) Like(ctx context.Context, fromUserID, toUserID uuid.UUID) 
 
 	switch fromUser.Role {
 	case "freelancer":
-		freelancer, err := s.freelancerSvc.GetByUserID(ctx, fromUserID)
+		freelancer, err := s.freelancerDep.GetByUserID(ctx, fromUserID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get freelancer by user id: %w", err)
 		}
-		project, err := s.projectSvc.GetByUserID(ctx, toUserID)
+		project, err := s.projectDep.GetByUserID(ctx, toUserID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get project by user id: %w", err)
 		}
@@ -120,11 +129,11 @@ func (s *likeService) Like(ctx context.Context, fromUserID, toUserID uuid.UUID) 
 		projectID = project.ID
 
 	case "project":
-		project, err := s.projectSvc.GetByUserID(ctx, fromUserID)
+		project, err := s.projectDep.GetByUserID(ctx, fromUserID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get project by user id: %w", err)
 		}
-		freelancer, err := s.freelancerSvc.GetByUserID(ctx, toUserID)
+		freelancer, err := s.freelancerDep.GetByUserID(ctx, toUserID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get freelancer by user id: %w", err)
 		}
@@ -149,22 +158,22 @@ func (s *likeService) Dislike(ctx context.Context, fromUserID, toUserID uuid.UUI
 func (s *likeService) ResolvePair(ctx context.Context, fromUser, toUser *domain.User) (freelancerID, projectID uuid.UUID, err error) {
 	switch {
 	case fromUser.Role == "freelancer" && toUser.Role == "project":
-		freelancer, err := s.freelancerSvc.GetByUserID(ctx, fromUser.ID)
+		freelancer, err := s.freelancerDep.GetByUserID(ctx, fromUser.ID)
 		if err != nil {
 			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get freelancer by fromUserID: %w", err)
 		}
-		project, err := s.projectSvc.GetByUserID(ctx, toUser.ID)
+		project, err := s.projectDep.GetByUserID(ctx, toUser.ID)
 		if err != nil {
 			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get project by toUserID: %w", err)
 		}
 		return freelancer.ID, project.ID, nil
 
 	case fromUser.Role == "project" && toUser.Role == "freelancer":
-		freelancer, err := s.freelancerSvc.GetByUserID(ctx, toUser.ID)
+		freelancer, err := s.freelancerDep.GetByUserID(ctx, toUser.ID)
 		if err != nil {
 			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get freelancer by toUserID: %w", err)
 		}
-		project, err := s.projectSvc.GetByUserID(ctx, fromUser.ID)
+		project, err := s.projectDep.GetByUserID(ctx, fromUser.ID)
 		if err != nil {
 			return uuid.Nil, uuid.Nil, fmt.Errorf("failed to get project by fromUserID: %w", err)
 		}
@@ -173,4 +182,8 @@ func (s *likeService) ResolvePair(ctx context.Context, fromUser, toUser *domain.
 	default:
 		return uuid.Nil, uuid.Nil, fmt.Errorf("invalid role combination: %s -> %s", fromUser.Role, toUser.Role)
 	}
+}
+
+func (s *likeService) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {
+	return s.repo.DeleteByUserID(ctx, userID)
 }

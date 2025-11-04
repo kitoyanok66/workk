@@ -82,9 +82,16 @@ func NewApp(
 ) *App {
 	fAdapter := freelancers.NewFreelancerFetcherAdapter(freelancerSvc)
 	pAdapter := projects.NewProjectFetcherAdapter(projectSvc)
+	lAdapter := likes.NewLikeFetcherAdapter(likeSvc)
 
 	freelancerSvc.SetProjectDep(pAdapter)
+	freelancerSvc.SetLikeDep(lAdapter)
+
 	projectSvc.SetFreelancerDep(fAdapter)
+	projectSvc.SetLikeDep(lAdapter)
+
+	likeSvc.SetFreelancerDep(fAdapter)
+	likeSvc.SetProjectDep(pAdapter)
 
 	return &App{
 		DB:                db,

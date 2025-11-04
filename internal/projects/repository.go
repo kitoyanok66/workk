@@ -16,7 +16,7 @@ type ProjectRepository interface {
 	Create(ctx context.Context, project *domain.Project) error
 	Update(ctx context.Context, project *domain.Project) error
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, freelancerID uuid.UUID, limit int) ([]*domain.Project, error)
+	GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, currentUserID uuid.UUID) (*domain.Project, error)
 }
 
 type projectRepository struct {
@@ -88,7 +88,7 @@ func (r *projectRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&ProjectORM{}, "id = ?", id).Error
 }
 
-func (r *projectRepository) GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, freelancerID uuid.UUID, limit int) ([]*domain.Project, error) {
+func (r *projectRepository) GetBySkillIDs(ctx context.Context, skillIDs []uuid.UUID, currentUserID uuid.UUID) (*domain.Project, error) {
 	if len(skillIDs) == 0 {
 		return nil, nil
 	}
@@ -105,17 +105,19 @@ func (r *projectRepository) GetBySkillIDs(ctx context.Context, skillIDs []uuid.U
         )
         GROUP BY p.id
         ORDER BY COUNT(DISTINCT ps.skill_id) DESC
-        LIMIT ?;
+        LIMIT 1;
     `
 
-	var ormProjects []ProjectORM
-	if err := r.db.WithContext(ctx).Raw(query, skillIDs, freelancerID, limit).Scan(&ormProjects).Error; err != nil {
+	var ormProject ProjectORM
+	if err := r.db.WithContext(ctx).Raw(query, skillIDs, currentUserID).Scan(&ormProject).Error; err != nil {
 		return nil, err
 	}
 
-	var result []*domain.Project
-	for _, p := range ormProjects {
-		result = append(result, p.ToDomain())
+	if ormProject.ID != uuid.Nil {
+		if err := r.db.WithContext(ctx).Preload("Skills").First(&ormProject, "id = ?", ormProject.ID).Error; err != nil {
+			return nil, err
+		}
 	}
-	return result, nil
+
+	return ormProject.ToDomain(), nil
 }
