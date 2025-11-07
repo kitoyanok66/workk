@@ -66,11 +66,13 @@ func (s *freelancerService) Create(ctx context.Context, userID uuid.UUID, title,
 	if err != nil {
 		return nil, err
 	}
+
+	if err := s.likeDep.DeleteByUserID(ctx, userID); err != nil {
+		return nil, err
+	}
+
 	if existing != nil {
 		if err := s.repo.Delete(ctx, existing.ID); err != nil {
-			return nil, err
-		}
-		if err := s.likeDep.DeleteByUserID(ctx, userID); err != nil {
 			return nil, err
 		}
 	}

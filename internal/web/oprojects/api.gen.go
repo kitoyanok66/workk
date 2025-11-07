@@ -45,6 +45,9 @@ type ServerInterface interface {
 	// Create new project
 	// (POST /projects)
 	PostProjects(ctx echo.Context) error
+	// Get project by userID
+	// (GET /projects/by-user/{userID})
+	GetProjectsByUserUserID(ctx echo.Context, userID openapi_types.UUID) error
 	// Delete project by ID
 	// (DELETE /projects/{id})
 	DeleteProjectsId(ctx echo.Context, id openapi_types.UUID) error
@@ -76,6 +79,22 @@ func (w *ServerInterfaceWrapper) PostProjects(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostProjects(ctx)
+	return err
+}
+
+// GetProjectsByUserUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetProjectsByUserUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetProjectsByUserUserID(ctx, userID)
 	return err
 }
 
@@ -157,6 +176,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/projects", wrapper.GetProjects)
 	router.POST(baseURL+"/projects", wrapper.PostProjects)
+	router.GET(baseURL+"/projects/by-user/:userID", wrapper.GetProjectsByUserUserID)
 	router.DELETE(baseURL+"/projects/:id", wrapper.DeleteProjectsId)
 	router.GET(baseURL+"/projects/:id", wrapper.GetProjectsId)
 	router.PATCH(baseURL+"/projects/:id", wrapper.PatchProjectsId)
@@ -237,6 +257,59 @@ type PostProjects404JSONResponse Error
 func (response PostProjects404JSONResponse) VisitPostProjectsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsByUserUserIDRequestObject struct {
+	UserID openapi_types.UUID `json:"userID"`
+}
+
+type GetProjectsByUserUserIDResponseObject interface {
+	VisitGetProjectsByUserUserIDResponse(w http.ResponseWriter) error
+}
+
+type GetProjectsByUserUserID200JSONResponse ProjectDTO
+
+func (response GetProjectsByUserUserID200JSONResponse) VisitGetProjectsByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsByUserUserID400JSONResponse Error
+
+func (response GetProjectsByUserUserID400JSONResponse) VisitGetProjectsByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsByUserUserID401JSONResponse Error
+
+func (response GetProjectsByUserUserID401JSONResponse) VisitGetProjectsByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsByUserUserID404JSONResponse Error
+
+func (response GetProjectsByUserUserID404JSONResponse) VisitGetProjectsByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetProjectsByUserUserID500JSONResponse Error
+
+func (response GetProjectsByUserUserID500JSONResponse) VisitGetProjectsByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -426,6 +499,9 @@ type StrictServerInterface interface {
 	// Create new project
 	// (POST /projects)
 	PostProjects(ctx context.Context, request PostProjectsRequestObject) (PostProjectsResponseObject, error)
+	// Get project by userID
+	// (GET /projects/by-user/{userID})
+	GetProjectsByUserUserID(ctx context.Context, request GetProjectsByUserUserIDRequestObject) (GetProjectsByUserUserIDResponseObject, error)
 	// Delete project by ID
 	// (DELETE /projects/{id})
 	DeleteProjectsId(ctx context.Context, request DeleteProjectsIdRequestObject) (DeleteProjectsIdResponseObject, error)
@@ -495,6 +571,31 @@ func (sh *strictHandler) PostProjects(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(PostProjectsResponseObject); ok {
 		return validResponse.VisitPostProjectsResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetProjectsByUserUserID operation middleware
+func (sh *strictHandler) GetProjectsByUserUserID(ctx echo.Context, userID openapi_types.UUID) error {
+	var request GetProjectsByUserUserIDRequestObject
+
+	request.UserID = userID
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetProjectsByUserUserID(ctx.Request().Context(), request.(GetProjectsByUserUserIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetProjectsByUserUserID")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetProjectsByUserUserIDResponseObject); ok {
+		return validResponse.VisitGetProjectsByUserUserIDResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}

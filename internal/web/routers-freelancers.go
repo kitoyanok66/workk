@@ -52,6 +52,24 @@ func (h *freelancerHandler) GetFreelancersId(ctx context.Context, request ofreel
 	return ofreelancers.GetFreelancersId200JSONResponse(*dto.NewFreelancerDTO(freelancer)), nil
 }
 
+// GET /freelancers/by-user/{userID}
+func (h *freelancerHandler) GetFreelancersByUserUserID(ctx context.Context, request ofreelancers.GetFreelancersByUserUserIDRequestObject) (ofreelancers.GetFreelancersByUserUserIDResponseObject, error) {
+	userID, err := uuid.Parse(request.UserID.String())
+	if err != nil {
+		return ofreelancers.GetFreelancersByUserUserID400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	}
+
+	freelancer, err := h.svc.GetByUserID(ctx, userID)
+	if err != nil {
+		return ofreelancers.GetFreelancersByUserUserID500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+	if freelancer == nil {
+		return ofreelancers.GetFreelancersByUserUserID404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, "freelancer not found")), nil
+	}
+
+	return ofreelancers.GetFreelancersByUserUserID200JSONResponse(*dto.NewFreelancerDTO(freelancer)), nil
+}
+
 // POST /freelancers
 func (h *freelancerHandler) PostFreelancers(ctx context.Context, request ofreelancers.PostFreelancersRequestObject) (ofreelancers.PostFreelancersResponseObject, error) {
 	userID, ok := middleware.UserIDFromContext(ctx)

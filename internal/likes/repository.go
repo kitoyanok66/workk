@@ -44,7 +44,9 @@ func (r *likeRepository) ExistsReverse(ctx context.Context, userID, targetID uui
 }
 
 func (r *likeRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {
-	return r.db.WithContext(ctx).
-		Where("from_user_id = ? OR to_user_id = ?", userID, userID).
-		Delete(&LikeORM{}).Error
+	tx := r.db.WithContext(ctx).Where("from_user_id = ? OR to_user_id = ?", userID, userID).Delete(&LikeORM{})
+	if tx.Error != nil {
+		return tx.Error
+	}
+	return nil
 }

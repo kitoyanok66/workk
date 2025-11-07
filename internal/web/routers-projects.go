@@ -52,6 +52,24 @@ func (h *projectHandler) GetProjectsId(ctx context.Context, request oprojects.Ge
 	return oprojects.GetProjectsId200JSONResponse(*dto.NewProjectDTO(project)), nil
 }
 
+// GET /projects/by-user/{userID}
+func (h *projectHandler) GetProjectsByUserUserID(ctx context.Context, request oprojects.GetProjectsByUserUserIDRequestObject) (oprojects.GetProjectsByUserUserIDResponseObject, error) {
+	userID, err := uuid.Parse(request.UserID.String())
+	if err != nil {
+		return oprojects.GetProjectsByUserUserID400JSONResponse(*dto.NewErrorDTO(http.StatusBadRequest, "invalid UUID")), nil
+	}
+
+	project, err := h.svc.GetByUserID(ctx, userID)
+	if err != nil {
+		return oprojects.GetProjectsByUserUserID500JSONResponse(*dto.NewErrorDTO(http.StatusInternalServerError, err.Error())), nil
+	}
+	if project == nil {
+		return oprojects.GetProjectsByUserUserID404JSONResponse(*dto.NewErrorDTO(http.StatusNotFound, "project not found")), nil
+	}
+
+	return oprojects.GetProjectsByUserUserID200JSONResponse(*dto.NewProjectDTO(project)), nil
+}
+
 // POST /projects
 func (h *projectHandler) PostProjects(ctx context.Context, request oprojects.PostProjectsRequestObject) (oprojects.PostProjectsResponseObject, error) {
 	userID, ok := middleware.UserIDFromContext(ctx)

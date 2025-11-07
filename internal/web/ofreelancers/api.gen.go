@@ -45,6 +45,9 @@ type ServerInterface interface {
 	// Create new freelancer
 	// (POST /freelancers)
 	PostFreelancers(ctx echo.Context) error
+	// Get freelancer by userID
+	// (GET /freelancers/by-user/{userID})
+	GetFreelancersByUserUserID(ctx echo.Context, userID openapi_types.UUID) error
 	// Delete freelancer by ID
 	// (DELETE /freelancers/{id})
 	DeleteFreelancersId(ctx echo.Context, id openapi_types.UUID) error
@@ -76,6 +79,22 @@ func (w *ServerInterfaceWrapper) PostFreelancers(ctx echo.Context) error {
 
 	// Invoke the callback with all the unmarshaled arguments
 	err = w.Handler.PostFreelancers(ctx)
+	return err
+}
+
+// GetFreelancersByUserUserID converts echo context to params.
+func (w *ServerInterfaceWrapper) GetFreelancersByUserUserID(ctx echo.Context) error {
+	var err error
+	// ------------- Path parameter "userID" -------------
+	var userID openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithLocation("simple", false, "userID", runtime.ParamLocationPath, ctx.Param("userID"), &userID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("Invalid format for parameter userID: %s", err))
+	}
+
+	// Invoke the callback with all the unmarshaled arguments
+	err = w.Handler.GetFreelancersByUserUserID(ctx, userID)
 	return err
 }
 
@@ -157,6 +176,7 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 
 	router.GET(baseURL+"/freelancers", wrapper.GetFreelancers)
 	router.POST(baseURL+"/freelancers", wrapper.PostFreelancers)
+	router.GET(baseURL+"/freelancers/by-user/:userID", wrapper.GetFreelancersByUserUserID)
 	router.DELETE(baseURL+"/freelancers/:id", wrapper.DeleteFreelancersId)
 	router.GET(baseURL+"/freelancers/:id", wrapper.GetFreelancersId)
 	router.PATCH(baseURL+"/freelancers/:id", wrapper.PatchFreelancersId)
@@ -237,6 +257,59 @@ type PostFreelancers404JSONResponse Error
 func (response PostFreelancers404JSONResponse) VisitPostFreelancersResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersByUserUserIDRequestObject struct {
+	UserID openapi_types.UUID `json:"userID"`
+}
+
+type GetFreelancersByUserUserIDResponseObject interface {
+	VisitGetFreelancersByUserUserIDResponse(w http.ResponseWriter) error
+}
+
+type GetFreelancersByUserUserID200JSONResponse FreelancerDTO
+
+func (response GetFreelancersByUserUserID200JSONResponse) VisitGetFreelancersByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersByUserUserID400JSONResponse Error
+
+func (response GetFreelancersByUserUserID400JSONResponse) VisitGetFreelancersByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersByUserUserID401JSONResponse Error
+
+func (response GetFreelancersByUserUserID401JSONResponse) VisitGetFreelancersByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersByUserUserID404JSONResponse Error
+
+func (response GetFreelancersByUserUserID404JSONResponse) VisitGetFreelancersByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetFreelancersByUserUserID500JSONResponse Error
+
+func (response GetFreelancersByUserUserID500JSONResponse) VisitGetFreelancersByUserUserIDResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -426,6 +499,9 @@ type StrictServerInterface interface {
 	// Create new freelancer
 	// (POST /freelancers)
 	PostFreelancers(ctx context.Context, request PostFreelancersRequestObject) (PostFreelancersResponseObject, error)
+	// Get freelancer by userID
+	// (GET /freelancers/by-user/{userID})
+	GetFreelancersByUserUserID(ctx context.Context, request GetFreelancersByUserUserIDRequestObject) (GetFreelancersByUserUserIDResponseObject, error)
 	// Delete freelancer by ID
 	// (DELETE /freelancers/{id})
 	DeleteFreelancersId(ctx context.Context, request DeleteFreelancersIdRequestObject) (DeleteFreelancersIdResponseObject, error)
@@ -495,6 +571,31 @@ func (sh *strictHandler) PostFreelancers(ctx echo.Context) error {
 		return err
 	} else if validResponse, ok := response.(PostFreelancersResponseObject); ok {
 		return validResponse.VisitPostFreelancersResponse(ctx.Response())
+	} else if response != nil {
+		return fmt.Errorf("unexpected response type: %T", response)
+	}
+	return nil
+}
+
+// GetFreelancersByUserUserID operation middleware
+func (sh *strictHandler) GetFreelancersByUserUserID(ctx echo.Context, userID openapi_types.UUID) error {
+	var request GetFreelancersByUserUserIDRequestObject
+
+	request.UserID = userID
+
+	handler := func(ctx echo.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetFreelancersByUserUserID(ctx.Request().Context(), request.(GetFreelancersByUserUserIDRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetFreelancersByUserUserID")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		return err
+	} else if validResponse, ok := response.(GetFreelancersByUserUserIDResponseObject); ok {
+		return validResponse.VisitGetFreelancersByUserUserIDResponse(ctx.Response())
 	} else if response != nil {
 		return fmt.Errorf("unexpected response type: %T", response)
 	}
